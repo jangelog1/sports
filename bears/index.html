@@ -100,6 +100,23 @@
   td.team{text-align:left;font-weight:700;white-space:nowrap}
   tr.lead td{background:rgba(255,122,47,.12);box-shadow:inset 3px 0 0 var(--orange)}
   .confhd{font-size:13px;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent2);margin:18px 2px 2px;font-weight:800}
+  /* LEAGUE */
+  .wksel{display:flex;gap:6px;overflow-x:auto;padding:4px 2px 8px;-webkit-overflow-scrolling:touch}
+  .wkchip{flex:0 0 auto;background:var(--panel);border:1px solid var(--line);color:var(--muted);padding:7px 12px;border-radius:9px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap}
+  .wkchip:hover{color:var(--txt);border-color:var(--accent)}
+  .wkchip.on{background:var(--orange);color:#fff;border-color:var(--orange)}
+  .wkchip.po{border-color:var(--accent2);color:var(--accent2)}
+  .wkchip.po.on{background:var(--accent2);color:#0b162a;border-color:var(--accent2)}
+  .lgday{font-size:12px;font-weight:800;color:var(--accent2);margin:14px 2px 6px;letter-spacing:.3px}
+  .lgrow{display:grid;grid-template-columns:1fr 84px;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin-bottom:6px}
+  .lgrow.bear{box-shadow:inset 3px 0 0 var(--orange);background:rgba(255,122,47,.10)}
+  .lgrow .mu{font-weight:700;font-size:13.5px}
+  .lgrow .mu .at{color:var(--muted);font-weight:600}
+  .lgrow .mu b{color:var(--txt);font-variant-numeric:tabular-nums}
+  .lgrow .st{text-align:right;font-size:11.5px;font-weight:800}
+  .lgrow .st.live{color:var(--winline)}
+  .lgrow .st.final{color:var(--muted)}
+  .lgrow .st.pre{color:var(--accent2)}
   /* NEWS */
   .news{display:block;text-decoration:none;color:var(--txt);background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px 14px;margin-bottom:8px;transition:.12s}
   .news:hover{border-color:var(--accent);background:var(--panel2)}
@@ -136,6 +153,7 @@
     <button class="on" data-t="today">⚡ Today</button>
     <button data-t="schedule">📅 Schedule</button>
     <button data-t="standings">📊 Standings</button>
+    <button data-t="league">📆 League</button>
     <button data-t="news">📰 News</button>
     <button data-t="team">🐻 Team</button>
   </nav>
@@ -153,6 +171,12 @@
   <section id="standings">
     <div class="note">📊 <b>NFL — 2025 final standings</b> (all 8 divisions, most recent completed season), verified vs Wikipedia / NFL.com. The 2026 tables update once the season kicks off Sep 13.</div>
     <div id="standingsEl"></div>
+  </section>
+
+  <section id="league">
+    <div class="note">📆 <b>Every NFL game</b>, week by week — plus the playoffs and <b>Super Bowl LXI</b> (Feb 14, 2027 · SoFi Stadium, LA). Live scores &amp; matchups via <b>ESPN</b>; playoff matchups fill in as the season finishes. Tap a week.</div>
+    <div id="leagueSel" class="wksel"></div>
+    <div id="leagueEl"></div>
   </section>
 
   <section id="news">
@@ -415,6 +439,65 @@ function renderTicker(){
   $("#tickerTrack").innerHTML=one+one;
 }
 
+/* ============ LEAGUE TAB (every NFL game, via ESPN) ============ */
+const ESPN="https://site.api.espn.com/apis/site/v2/sports/football/nfl";
+const LG_TABS=[];
+for(let w=1;w<=18;w++) LG_TABS.push({key:"r"+w, st:2, w, label:"Wk "+w});
+LG_TABS.push({key:"wc",st:3,w:1,label:"Wild Card",po:1});
+LG_TABS.push({key:"dv",st:3,w:2,label:"Divisional",po:1});
+LG_TABS.push({key:"cc",st:3,w:3,label:"Conf Champ",po:1});
+LG_TABS.push({key:"sb",st:3,w:5,label:"Super Bowl",po:1});
+const LG_CACHE={}; let LG_CUR="r1";
+const etDay=ts=>new Date(ts).toLocaleDateString("en-US",{timeZone:"America/New_York",weekday:"short",month:"short",day:"numeric"});
+const etTime=ts=>new Date(ts).toLocaleTimeString("en-US",{timeZone:"America/New_York",hour:"numeric",minute:"2-digit"})+" ET";
+function parseLg(ev){ const comp=ev.competitions[0], cs=comp.competitors||[];
+  const home=cs.find(c=>c.homeAway==="home")||cs[0]||{}, away=cs.find(c=>c.homeAway==="away")||cs[1]||{};
+  const nm=c=>(c.team&&(c.team.shortDisplayName||c.team.abbreviation||c.team.displayName))||"TBD";
+  const ab=c=>(c.team&&c.team.abbreviation)||"";
+  const sc=v=>(v===""||v==null)?null:v;
+  return {ts:ev.date, away:nm(away), home:nm(home), aAb:ab(away), hAb:ab(home),
+    aSc:sc(away.score), hSc:sc(home.score), state:(ev.status&&ev.status.type&&ev.status.type.state)||"pre",
+    detail:(ev.status&&ev.status.type&&ev.status.type.shortDetail)||""}; }
+async function lgFetch(t){
+  if(LG_CACHE[t.key]) return LG_CACHE[t.key];
+  const d=await fetchJSON(`${ESPN}/scoreboard?dates=2026&seasontype=${t.st}&week=${t.w}`);
+  const games=(d.events||[]).map(parseLg).sort((a,b)=>a.ts<b.ts?-1:1);
+  if(games.length && games.every(g=>g.state==="post")) LG_CACHE[t.key]=games; // cache only completed weeks
+  return games;
+}
+function renderLgNav(){
+  $("#leagueSel").innerHTML=LG_TABS.map(t=>`<button class="wkchip ${t.po?"po":""} ${t.key===LG_CUR?"on":""}" data-lg="${t.key}">${esc(t.label)}</button>`).join("");
+  document.querySelectorAll("#leagueSel .wkchip").forEach(b=>b.onclick=()=>{LG_CUR=b.dataset.lg;renderLgNav();loadLg();
+    const sel=$("#leagueSel button.on"); if(sel) sel.scrollIntoView({inline:"center",block:"nearest"});});
+}
+async function loadLg(){
+  const t=LG_TABS.find(x=>x.key===LG_CUR), el=$("#leagueEl");
+  if(!el.innerHTML||!el.dataset.k||el.dataset.k!==LG_CUR) el.innerHTML='<div class="note">Loading '+esc(t.label)+'…</div>';
+  let games; try{ games=await lgFetch(t); }
+  catch(e){ el.dataset.k=LG_CUR; el.innerHTML='<div class="note">⚠️ Couldn’t load '+esc(t.label)+' from ESPN — tap another week or retry.</div>'; return; }
+  el.dataset.k=LG_CUR;
+  if(!games.length){ el.innerHTML='<div class="note">No games scheduled for '+esc(t.label)+' yet.</div>'; return; }
+  let h="", lastDay="";
+  games.forEach(g=>{ const day=etDay(g.ts);
+    if(day!==lastDay){ h+=`<div class="lgday">${esc(day)}</div>`; lastDay=day; }
+    const bear=g.aAb==="CHI"||g.hAb==="CHI";
+    const played=g.state!=="pre"&&g.aSc!=null;
+    const mu=played?`${esc(g.away)} <b>${esc(g.aSc)}</b> <span class="at">@</span> ${esc(g.home)} <b>${esc(g.hSc)}</b>`
+                   :`${esc(g.away)} <span class="at">@</span> ${esc(g.home)}`;
+    const stc=g.state==="in"?"live":(g.state==="post"?"final":"pre");
+    const st=g.state==="in"?(g.detail||"LIVE"):(g.state==="post"?"FINAL":etTime(g.ts));
+    h+=`<div class="lgrow ${bear?"bear":""}"><div class="mu">${bear?"🐻 ":""}${mu}</div><div class="st ${stc}">${esc(st)}</div></div>`;});
+  el.innerHTML=h;
+}
+async function leagueBoot(){
+  try{ const d=await fetchJSON(ESPN+"/scoreboard");
+    const st=(d.season&&d.season.type)||2, wk=(d.week&&d.week.number)||1;
+    let key= st===3 ? ({1:"wc",2:"dv",3:"cc",5:"sb"}[wk]||"wc") : ("r"+Math.min(Math.max(wk,1),18));
+    if(LG_TABS.some(t=>t.key===key)) LG_CUR=key;
+  }catch(e){}
+  renderLgNav(); loadLg();
+}
+
 /* ============ REFRESH + NAV + INIT ============ */
 async function refresh(){
   setChip("load","Updating…");
@@ -435,7 +518,9 @@ $("#refreshBtn").onclick=refresh;
 // initial render (baked) then live overlay
 renderToday(); renderSchedule(); renderStandings(); renderNews(); renderTeam(); renderTicker();
 refresh();
+leagueBoot();                    // load the live League tab (every NFL game)
 setInterval(refresh,60000);
+setInterval(()=>{ if($("#league").classList.contains("on")) loadLg(); },60000); // live refresh when viewing League
 
 // PWA service worker
 if("serviceWorker" in navigator && location.protocol.startsWith("http")){
