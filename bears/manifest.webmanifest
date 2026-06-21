@@ -1,0 +1,15 @@
+{
+  "name": "Chicago Bears",
+  "short_name": "Bears",
+  "description": "Chicago Bears — schedule, standings & news",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b162a",
+  "theme_color": "#0b162a",
+  "icons": [
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

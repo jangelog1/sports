@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Chicago Bears — Schedule, Standings & News</title>
+<!-- PWA: installable home-screen app -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bears">
+<meta name="theme-color" content="#0b162a">
+<link rel="apple-touch-icon" href="icon-512.png">
+<link rel="icon" type="image/png" href="icon-512.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+  :root{
+    --bg:#0b162a; --bg2:#0a1322; --navy:#0b162a; --orange:#c83803;
+    --panel:#11203a; --panel2:#16264a; --line:#26406a;
+    --txt:#ffffff; --muted:#a9c0e0; --accent:#ff7a2f; --accent2:#f0b429;
+    --gold:#f0b429; --win:#16331f; --winline:#2bd66f; --loss:#3a1622; --lossline:#ff5c7c;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:linear-gradient(180deg,#0d1b33 0%,var(--bg) 40%);color:var(--txt);
+    font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-height:100vh;padding:0 0 60px}
+  /* TICKER */
+  .ticker{position:sticky;top:0;z-index:60;background:linear-gradient(90deg,#0a1322,#0b1a33);border-bottom:1px solid var(--line);overflow:hidden;white-space:nowrap;padding-top:env(safe-area-inset-top,0px)}
+  .ticker-row{display:flex;align-items:center}
+  .ticker-lbl{flex:none;background:var(--orange);color:#fff;font-weight:800;font-size:11px;letter-spacing:.5px;padding:7px 11px;text-transform:uppercase;z-index:2}
+  .ticker-mask{overflow:hidden;flex:1}
+  .ticker-track{display:inline-block;white-space:nowrap;animation:tick 50s linear infinite;will-change:transform}
+  .ticker:hover .ticker-track{animation-play-state:paused}
+  .ticker-item{display:inline-flex;align-items:center;gap:6px;margin:0 18px;font-size:12.5px;font-weight:600;color:var(--txt);padding:7px 0}
+  .ticker-item b{color:var(--accent2)}
+  .ticker-item .mut{color:var(--muted);font-weight:400}
+  @keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  @media (prefers-reduced-motion:reduce){.ticker-track{animation:none}}
+  /* HEADER */
+  header{padding:16px 18px 14px;text-align:center;border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(200,56,3,.14),transparent)}
+  .ballwrap{display:flex;justify-content:center;margin-bottom:6px}
+  .ball{height:104px;width:auto;display:block;border-radius:18px;filter:drop-shadow(0 8px 16px rgba(0,0,0,.5));animation:bob 4.5s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  @media (prefers-reduced-motion:reduce){.ball{animation:none}}
+  h1{font-size:25px;letter-spacing:-.4px;display:flex;align-items:center;gap:9px;justify-content:center}
+  .badge{background:var(--orange);color:#fff;font-size:11px;font-weight:800;padding:3px 8px;border-radius:20px;letter-spacing:.5px;text-transform:uppercase}
+  .sub{color:var(--muted);margin-top:5px;font-size:13px}
+  .sub b{color:var(--accent2)}
+  .statusbar{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap;justify-content:center}
+  .chip{display:inline-flex;align-items:center;gap:7px;background:var(--panel);border:1px solid var(--line);padding:6px 12px;border-radius:20px;font-size:12.5px;font-weight:600}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--muted)}
+  .chip.live .dot{background:var(--winline);box-shadow:0 0 8px var(--winline);animation:pulse 1.6s infinite}
+  .chip.snap .dot{background:var(--accent2)}
+  .chip.load .dot{background:var(--accent);animation:pulse .8s infinite}
+  @keyframes pulse{50%{opacity:.35}}
+  .rbtn{background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:6px 13px;border-radius:20px;cursor:pointer;font-weight:600;font-size:12.5px}
+  .rbtn:hover{border-color:var(--accent)}
+  .wrap{max-width:760px;margin:0 auto;padding:0 16px}
+  /* NAV */
+  nav{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0 4px;justify-content:center}
+  nav button{background:var(--panel);border:1px solid var(--line);color:var(--muted);padding:9px 15px;border-radius:10px;cursor:pointer;font-weight:700;font-size:14px;transition:.15s}
+  nav button:hover{color:var(--txt);border-color:var(--accent)}
+  nav button.on{background:var(--orange);color:#fff;border-color:var(--orange)}
+  section{display:none;animation:fade .25s}
+  section.on{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+  .note{color:var(--muted);font-size:12.5px;margin:14px 0;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent2);padding:10px 14px;border-radius:8px}
+  .note b{color:var(--txt)}
+  /* CARDS */
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:14px;margin:12px 0}
+  .card h2{font-size:14px;text-transform:uppercase;letter-spacing:.6px;color:var(--accent2);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .gamebig{text-align:center;padding:6px 0}
+  .gamebig .vs{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+  .gamebig .opp{font-size:22px;font-weight:800;margin:4px 0}
+  .gamebig .meta{font-size:13px;color:var(--muted)}
+  .gamebig .cd{font-size:13px;color:var(--accent2);font-weight:700;margin-top:6px}
+  .gamebig .score{font-size:30px;font-weight:900;letter-spacing:1px;margin:2px 0}
+  .res-w{color:var(--winline)} .res-l{color:var(--lossline)}
+  .pill{display:inline-block;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:12.5px;margin:3px 5px 0 0}
+  .snapgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .snapgrid .b{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+  .snapgrid .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+  .snapgrid .v{font-size:15px;font-weight:700;margin-top:2px}
+  /* SCHEDULE */
+  .grow{display:grid;grid-template-columns:42px 60px 1fr 92px;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin-bottom:6px}
+  .grow .wk{font-size:10.5px;color:var(--muted);font-weight:700;text-align:center}
+  .grow .dt{font-size:12px;color:var(--accent2);font-weight:700;font-variant-numeric:tabular-nums}
+  .grow .op{font-weight:700;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .grow .op .ha{color:var(--muted);font-weight:600;font-size:12px}
+  .grow .rt{text-align:right;font-size:12.5px;font-weight:700}
+  .grow.bye{grid-template-columns:42px 1fr;color:var(--muted);font-style:italic;justify-items:start}
+  .grow.done{opacity:.85}
+  .tag{font-size:9.5px;font-weight:800;padding:2px 6px;border-radius:5px;text-transform:uppercase;letter-spacing:.3px}
+  .tag.prime{background:#2a1840;color:#d9b3ff;border:1px solid #6b3fa0}
+  .tag.home{background:#10233b;color:#7fb2ff;border:1px solid #345a8f}
+  .tag.w{background:var(--win);color:var(--winline)} .tag.l{background:var(--loss);color:var(--lossline)}
+  /* STANDINGS */
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th,td{padding:8px 6px;text-align:center;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+  td.team{text-align:left;font-weight:700;white-space:nowrap}
+  tr.lead td{background:rgba(255,122,47,.12);box-shadow:inset 3px 0 0 var(--orange)}
+  /* NEWS */
+  .news{display:block;text-decoration:none;color:var(--txt);background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px 14px;margin-bottom:8px;transition:.12s}
+  .news:hover{border-color:var(--accent);background:var(--panel2)}
+  .news .ntag{font-size:9.5px;font-weight:800;color:#fff;background:var(--orange);padding:2px 7px;border-radius:5px;text-transform:uppercase;letter-spacing:.3px}
+  .news .nh{font-weight:700;margin:6px 0 3px;font-size:14.5px}
+  .news .nd{color:var(--muted);font-size:12.5px;line-height:1.45}
+  .news .nm{color:var(--accent2);font-size:11px;font-weight:600;margin-top:5px}
+  .foot{color:var(--muted);font-size:11.5px;text-align:center;margin:22px 0 6px;line-height:1.6}
+  .foot a{color:var(--accent2)}
+  a.lnk{color:var(--accent2)}
+</style>
+</head>
+<body>
+
+<div class="ticker">
+  <div class="ticker-row">
+    <span class="ticker-lbl">🐻 Bears</span>
+    <div class="ticker-mask"><div class="ticker-track" id="tickerTrack"></div></div>
+  </div>
+</div>
+
+<header>
+  <div class="ballwrap"><img class="ball" src="bears-logo.png" alt="Chicago Bears logo"></div>
+  <h1>Chicago Bears <span class="badge">Bear Down</span></h1>
+  <div class="sub">NFC North · <b>Soldier Field</b>, Chicago · HC Ben Johnson · QB Caleb Williams</div>
+  <div class="statusbar">
+    <span class="chip snap" id="chip"><span class="dot"></span><span id="chipTxt">Verified snapshot · Jun 21</span></span>
+    <button class="rbtn" id="refreshBtn">↻ Refresh</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav>
+    <button class="on" data-t="today">⚡ Today</button>
+    <button data-t="schedule">📅 Schedule</button>
+    <button data-t="standings">📊 Standings</button>
+    <button data-t="news">📰 News</button>
+    <button data-t="team">🐻 Team</button>
+  </nav>
+
+  <section class="on" id="today">
+    <div class="note">⚡ <b>Bears at a glance</b> — next game, last result and the season picture. Live game score &amp; next/last fixtures overlay from <b>TheSportsDB</b> when available; the rest is a verified snapshot.</div>
+    <div id="todayEl"></div>
+  </section>
+
+  <section id="schedule">
+    <div class="note">📅 <b>2026 regular season</b> — opponents &amp; home/away verified vs the official <a class="lnk" href="https://www.nfl.com/schedules/2026/by-team/chicago-bears" target="_blank" rel="noopener">NFL.com schedule ↗</a>. Bye in Week 10. <b>Kickoff times/days are subject to NFL flex scheduling.</b></div>
+    <div id="scheduleEl"></div>
+  </section>
+
+  <section id="standings">
+    <div class="note">📊 <b>NFC North — 2025 final standings</b> (most recent completed season), verified vs Wikipedia / NFL.com. The 2026 table will go live once the season kicks off Sep 13.</div>
+    <div id="standingsEl"></div>
+  </section>
+
+  <section id="news">
+    <div class="note">📰 <b>Latest Bears news</b> — a verified snapshot gathered from real sources (ESPN, NFL.com, chicagobears.com, Chicago Sun-Times) as of <b>Jun 21, 2026</b>. Tap any item for the source.</div>
+    <div id="newsEl"></div>
+  </section>
+
+  <section id="team">
+    <div id="teamEl"></div>
+  </section>
+</div>
+
+<div class="wrap">
+  <div class="foot">
+    Provenance: <b>schedule, standings &amp; news are a verified snapshot</b> (re-checked Jun 21, 2026 vs NFL.com, chicagobears.com, Wikipedia, Pro-Football-Reference); <b>live game scores + next/last fixtures</b> overlay from <a href="https://www.thesportsdb.com" target="_blank" rel="noopener">TheSportsDB</a> when reachable. Unofficial fan dashboard — not affiliated with the Chicago Bears or the NFL.
+  </div>
+</div>
+
+<script>
+/* ============ CONFIG ============ */
+const SDB="https://www.thesportsdb.com/api/v1/json/3";
+const TEAM_ID="134938";          // Chicago Bears on TheSportsDB
+const SNAP_DATE="Jun 21, 2026";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ============ VERIFIED BAKED DATA (re-checked Jun 21, 2026) ============ */
+// 2026 regular-season schedule — opponents + home/away from NFL.com (Bye Wk10).
+// Dates are the scheduled game dates; times/days subject to flex scheduling.
+const SCHEDULE=[
+  {wk:1, date:"2026-09-13", opp:"Carolina Panthers", home:false},
+  {wk:2, date:"2026-09-20", opp:"Minnesota Vikings", home:true},
+  {wk:3, date:"2026-09-27", opp:"Philadelphia Eagles", home:true},
+  {wk:4, date:"2026-10-04", opp:"New York Jets", home:true},
+  {wk:5, date:"2026-10-11", opp:"Green Bay Packers", home:false},
+  {wk:6, date:"2026-10-18", opp:"Atlanta Falcons", home:false},
+  {wk:7, date:"2026-10-25", opp:"New England Patriots", home:true},
+  {wk:8, date:"2026-11-01", opp:"Seattle Seahawks", home:false},
+  {wk:9, date:"2026-11-08", opp:"Tampa Bay Buccaneers", home:true},
+  {wk:10, date:null, opp:"BYE WEEK", home:null, bye:true},
+  {wk:11, date:"2026-11-22", opp:"New Orleans Saints", home:true},
+  {wk:12, date:"2026-11-26", opp:"Detroit Lions", home:false, note:"Thanksgiving", prime:true},
+  {wk:13, date:"2026-12-06", opp:"Jacksonville Jaguars", home:true},
+  {wk:14, date:"2026-12-13", opp:"Miami Dolphins", home:false},
+  {wk:15, date:"2026-12-20", opp:"Buffalo Bills", home:false},
+  {wk:16, date:"2026-12-25", opp:"Green Bay Packers", home:true, note:"Christmas", prime:true},
+  {wk:17, date:"2027-01-03", opp:"Detroit Lions", home:true},
+  {wk:18, date:"2027-01-10", opp:"Minnesota Vikings", home:false}
+];
+// 2025 final NFC North standings (Wikipedia / NFL.com). Bears: NFC North champs, #2 seed.
+const STANDINGS=[
+  {team:"Chicago Bears", w:11, l:6, t:0, seed:"2", note:"Division champs", lead:true},
+  {team:"Green Bay Packers", w:9, l:7, t:1, seed:"7", note:"Wild card"},
+  {team:"Minnesota Vikings", w:9, l:8, t:0, note:"Missed playoffs (H2H over DET)"},
+  {team:"Detroit Lions", w:9, l:8, t:0, note:"Missed playoffs"}
+];
+const TEAM={
+  record:"11–6", finish:"NFC North champions · #2 seed",
+  playoff:"Won Wild Card (first playoff win since 2010); lost Divisional Round 17–20 to the LA Rams (Jan 18, 2026).",
+  hc:"Ben Johnson (Year 2)", oc:"Press Taylor", dc:"Dennis Allen",
+  qb:"Caleb Williams (Year 3)", stadium:"Soldier Field, Chicago",
+  camp:"Mandatory minicamp wrapped Jun 11 · Training camp opens Jul 23 at Halas Hall"
+};
+const STADIUM_NOTE="Plays at Soldier Field for 2026. A proposed move to a new stadium in Hammond, IN was advancing as of Jun 2026 (site not finalized) — verify before relying.";
+const STORYLINES=[
+  "🐻 2025: NFC North champions (11–6) — first division title since 2018, first playoff win since 2010",
+  "🎯 Ben Johnson enters Year 2; Caleb Williams Year 3 after a breakout sophomore season",
+  "📅 Open @ Carolina (Sep 13); Thanksgiving @ Detroit; Christmas vs Green Bay",
+  "🏟️ Stadium future in flux — Hammond, IN move advancing (2026 still at Soldier Field)",
+  "🔁 Offense reloads after trading WR DJ Moore; OL bolstered (Garrett Bradbury)"
+];
+// Curated, verified news (real sources, as of Jun 21 2026).
+const NEWS=[
+  {tag:"Caleb", h:"Caleb Williams enters Year 3 as a top-tier QB", d:"After leading the Bears to the NFC North title in Ben Johnson's first year, Williams is firmly in the leaguewide QB conversation heading into 2026.", date:"Jun 2026", url:"https://www.chicagobears.com/"},
+  {tag:"Schedule", h:"2026 schedule: open @ Carolina, holiday clashes loom", d:"Week 1 at the Panthers (Sep 13), Thanksgiving at Detroit (Nov 26) and a Christmas home date vs Green Bay headline the slate. Bye in Week 10.", date:"May 2026", url:"https://www.nfl.com/schedules/2026/by-team/chicago-bears"},
+  {tag:"Roster", h:"Bears reshape offense; DJ Moore dealt", d:"Chicago moved WR DJ Moore and added OL Garrett Bradbury and draft capital, retooling the supporting cast around Williams.", date:"Spring 2026", url:"https://www.chicagobears.com/news/roster-moves"},
+  {tag:"Camp", h:"Offseason program complete — camp opens Jul 23", d:"Mandatory minicamp wrapped Jun 11 at Halas Hall; players report for training camp July 23.", date:"Jun 2026", url:"https://www.chicagobears.com/"},
+  {tag:"Stadium", h:"Bears advance new-stadium plans toward Indiana", d:"The franchise advanced a stadium development effort eyeing Hammond, IN; the 2026 season will still be played at Soldier Field.", date:"Jun 2026", url:"https://www.chicagobears.com/"},
+  {tag:"Defense", h:"Dennis Allen's defense looks to build on playoff run", d:"DC Dennis Allen returns for 2026 after the unit helped Chicago to its first postseason appearance since 2020.", date:"Jun 2026", url:"https://www.chicagobears.com/"}
+];
+
+/* ============ LIVE STATE ============ */
+var LIVE={next:null, last:null, ok:false};
+
+/* ============ HELPERS ============ */
+function fmtDate(iso){ if(!iso) return ""; const d=new Date(iso+"T12:00:00");
+  return d.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}); }
+function daysUntil(iso){ if(!iso) return null; const now=new Date();
+  const d=new Date(iso+"T12:00:00"); return Math.ceil((d-now)/86400000); }
+function nextGame(){ const today=new Date().toISOString().slice(0,10);
+  return SCHEDULE.find(g=>!g.bye && g.date && g.date>=today) || null; }
+function lastGame(){ const today=new Date().toISOString().slice(0,10);
+  const past=SCHEDULE.filter(g=>!g.bye && g.date && g.date<today); return past[past.length-1]||null; }
+
+/* ============ TheSportsDB live overlay ============ */
+async function fetchJSON(u){ const r=await fetch(u,{cache:"no-store"}); if(!r.ok) throw new Error(r.status); return r.json(); }
+function mapEvent(e){ if(!e) return null; const home=e.idHomeTeam===TEAM_ID;
+  const usName=home?e.strHomeTeam:e.strAwayTeam, oppName=home?e.strAwayTeam:e.strHomeTeam;
+  const us=home?e.intHomeScore:e.intAwayScore, them=home?e.intAwayScore:e.intHomeScore;
+  return {opp:oppName, home, date:e.dateEvent, time:e.strTime, status:e.strStatus,
+    us:(us===""||us==null)?null:+us, them:(them===""||them==null)?null:+them, event:e.strEvent}; }
+async function loadLive(){
+  try{
+    const [nx,ls]=await Promise.all([
+      fetchJSON(SDB+"/eventsnext.php?id="+TEAM_ID).catch(()=>null),
+      fetchJSON(SDB+"/eventslast.php?id="+TEAM_ID).catch(()=>null)
+    ]);
+    const ne=nx&&nx.events&&nx.events[0]; const le=ls&&(ls.results||ls.events)&&(ls.results||ls.events)[0];
+    LIVE.next=mapEvent(ne); LIVE.last=mapEvent(le); LIVE.ok=!!(ne||le);
+  }catch(e){ LIVE.ok=false; }
+}
+
+/* ============ RENDER ============ */
+function setChip(cls,txt){ const c=$("#chip"); c.className="chip "+cls; $("#chipTxt").textContent=txt; }
+
+function renderToday(){
+  const ng=nextGame(), lg=lastGame();
+  // prefer live last result if it carries a score
+  const liveLast=(LIVE.last&&LIVE.last.us!=null)?LIVE.last:null;
+  let h="";
+  // live in-progress?
+  if(LIVE.next&&/in progress|1st|2nd|3rd|4th|half|ot/i.test(LIVE.next.status||"")){
+    const g=LIVE.next;
+    h+=`<div class="card"><h2>🔴 Live now</h2><div class="gamebig"><div class="vs">${g.home?"vs":"@"} ${esc(g.opp)}</div>
+      <div class="score">${g.us??""} – ${g.them??""}</div><div class="meta">${esc(g.status||"Live")}</div></div></div>`;
+  }
+  // next game
+  const N=LIVE.next&&LIVE.next.us==null?LIVE.next:null;
+  const nOpp=N?N.opp:(ng?ng.opp:null), nHome=N?N.home:(ng?ng.home:null), nDate=N?N.date:(ng?ng.date:null);
+  if(nOpp){ const du=daysUntil(nDate);
+    const cd=du==null?"":(du<=0?"Today":(du===1?"Tomorrow":"in "+du+" days"));
+    let wk="";
+    if(N){ const m=SCHEDULE.find(g=>g.date===N.date); wk=m?("Week "+m.wk):(N.date<SCHEDULE[0].date?"Preseason":"Next game"); }
+    else if(ng){ wk="Week "+ng.wk; }
+    h+=`<div class="card"><h2>📅 Next game</h2><div class="gamebig"><div class="vs">${nHome?"vs":"@"} ${wk}</div>
+      <div class="opp">${esc(nOpp)}</div><div class="meta">${fmtDate(nDate)}${ng&&ng.note?" · "+esc(ng.note):""} · ${nHome?"Soldier Field":"away"}</div>
+      ${cd?`<div class="cd">⏳ ${cd}</div>`:""}</div></div>`;
+  }
+  // last result
+  const L=liveLast||lg;
+  if(L){ const us=L.us, them=L.them, win=us!=null&&them!=null&&us>them;
+    const scoreLine=(us!=null&&them!=null)?`<div class="score ${win?"res-w":"res-l"}">${us} – ${them} ${win?"W":"L"}</div>`:"";
+    h+=`<div class="card"><h2>📋 Last game</h2><div class="gamebig"><div class="vs">${L.home?"vs":"@"} ${esc(L.opp)}</div>
+      ${scoreLine}<div class="meta">${fmtDate(L.date)}</div></div></div>`;
+  }
+  // snapshot strip
+  h+=`<div class="card"><h2>🐻 Snapshot</h2><div class="snapgrid">
+    <div class="b"><div class="k">2025 record</div><div class="v">${TEAM.record}</div></div>
+    <div class="b"><div class="k">Finish</div><div class="v" style="font-size:13px">${TEAM.finish}</div></div>
+    <div class="b"><div class="k">Head coach</div><div class="v" style="font-size:13.5px">${esc(TEAM.hc)}</div></div>
+    <div class="b"><div class="k">Quarterback</div><div class="v" style="font-size:13.5px">${esc(TEAM.qb)}</div></div>
+    </div><div class="note" style="margin:10px 0 0">🏈 <b>Offseason.</b> ${esc(TEAM.camp)}.</div></div>`;
+  // storylines
+  h+=`<div class="card"><h2>🔥 Storylines</h2>${STORYLINES.map(s=>`<span class="pill">${esc(s)}</span>`).join("")}</div>`;
+  $("#todayEl").innerHTML=h;
+}
+
+function renderSchedule(){
+  const today=new Date().toISOString().slice(0,10);
+  let h="";
+  SCHEDULE.forEach(g=>{
+    if(g.bye){ h+=`<div class="grow bye"><span class="wk">W${g.wk}</span><span>🛌 Bye week</span></div>`; return; }
+    const done=g.date<today, played=LIVE.last&&LIVE.last.date===g.date&&LIVE.last.us!=null;
+    let right=`<span class="dt">${fmtDate(g.date)}</span>`;
+    if(played){ const win=LIVE.last.us>LIVE.last.them; right=`<span class="tag ${win?"w":"l"}">${win?"W":"L"} ${LIVE.last.us}-${LIVE.last.them}</span>`; }
+    h+=`<div class="grow${done?" done":""}"><span class="wk">W${g.wk}</span><span class="dt">${fmtDate(g.date)}</span>
+      <span class="op"><span class="ha">${g.home?"vs":"@"}</span>${esc(g.opp)}
+        ${g.home?'<span class="tag home">Home</span>':""}${g.prime?`<span class="tag prime">${esc(g.note)}</span>`:""}</span>
+      <span class="rt">${g.home?"Soldier Field":"Away"}</span></div>`;
+  });
+  $("#scheduleEl").innerHTML=h;
+}
+
+function renderStandings(){
+  let rows=STANDINGS.map(s=>{const rec=s.w+"-"+s.l+(s.t?"-"+s.t:"");
+    return `<tr class="${s.lead?"lead":""}"><td class="team">${s.lead?"🐻 ":""}${esc(s.team)}</td>
+      <td>${rec}</td><td>${s.seed||"—"}</td><td style="text-align:left;color:var(--muted);font-size:12px">${esc(s.note||"")}</td></tr>`;}).join("");
+  $("#standingsEl").innerHTML=`<div class="card"><h2>📊 NFC North — 2025 final</h2>
+    <table><tr><th style="text-align:left">Team</th><th>Record</th><th>Seed</th><th style="text-align:left">Note</th></tr>${rows}</table>
+    <div class="note" style="margin:10px 0 0">${esc(TEAM.playoff)}</div></div>`;
+}
+
+function renderNews(){
+  $("#newsEl").innerHTML=NEWS.map(n=>`<a class="news" href="${esc(n.url)}" target="_blank" rel="noopener">
+    <span class="ntag">${esc(n.tag)}</span><div class="nh">${esc(n.h)}</div><div class="nd">${esc(n.d)}</div>
+    <div class="nm">${esc(n.date)} · source ↗</div></a>`).join("");
+}
+
+function renderTeam(){
+  $("#teamEl").innerHTML=`
+    <div class="card"><h2>🐻 Team snapshot</h2><div class="snapgrid">
+      <div class="b"><div class="k">2025 record</div><div class="v">${TEAM.record}</div></div>
+      <div class="b"><div class="k">Finish</div><div class="v" style="font-size:13px">${esc(TEAM.finish)}</div></div>
+      <div class="b"><div class="k">Head coach</div><div class="v" style="font-size:13.5px">${esc(TEAM.hc)}</div></div>
+      <div class="b"><div class="k">Off. coordinator</div><div class="v" style="font-size:13.5px">${esc(TEAM.oc)}</div></div>
+      <div class="b"><div class="k">Def. coordinator</div><div class="v" style="font-size:13.5px">${esc(TEAM.dc)}</div></div>
+      <div class="b"><div class="k">Quarterback</div><div class="v" style="font-size:13.5px">${esc(TEAM.qb)}</div></div>
+    </div>
+    <div class="note" style="margin:12px 0 0">🏆 <b>2025 postseason:</b> ${esc(TEAM.playoff)}</div>
+    <div class="note" style="margin:8px 0 0">🏟️ <b>Stadium:</b> ${esc(STADIUM_NOTE)}</div>
+    </div>
+    <div class="card"><h2>🔥 Storylines</h2>${STORYLINES.map(s=>`<span class="pill">${esc(s)}</span>`).join("")}</div>`;
+}
+
+function renderTicker(){
+  const items=[];
+  const ng=nextGame();
+  if(LIVE.last&&LIVE.last.us!=null){ const w=LIVE.last.us>LIVE.last.them;
+    items.push(`<span class="ticker-item">FINAL · ${LIVE.last.home?"vs":"@"} ${esc(LIVE.last.opp)} <b>${LIVE.last.us}-${LIVE.last.them}</b> <span class="mut">${w?"W":"L"}</span></span>`); }
+  if(ng) items.push(`<span class="ticker-item">NEXT · ${ng.home?"vs":"@"} ${esc(ng.opp)} <b>${fmtDate(ng.date)}</b></span>`);
+  items.push(`<span class="ticker-item">2025 <b>11–6</b> <span class="mut">NFC North champions</span></span>`);
+  items.push(`<span class="ticker-item">Camp opens <b>Jul 23</b> <span class="mut">Halas Hall</span></span>`);
+  items.push(`<span class="ticker-item">Week 1 <b>@ Carolina</b> <span class="mut">Sep 13</span></span>`);
+  const one=items.join("");
+  $("#tickerTrack").innerHTML=one+one;
+}
+
+/* ============ REFRESH + NAV + INIT ============ */
+async function refresh(){
+  setChip("load","Updating…");
+  await loadLive();
+  if(LIVE.ok){ const t=new Date().toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
+    setChip("live","Live · TheSportsDB · "+t); }
+  else { setChip("snap","Verified snapshot · "+SNAP_DATE); }
+  renderToday(); renderSchedule(); renderTicker();
+}
+
+document.querySelectorAll("nav button").forEach(b=>{b.onclick=()=>{
+  document.querySelectorAll("nav button").forEach(x=>x.classList.remove("on"));
+  document.querySelectorAll("section").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on"); $("#"+b.dataset.t).classList.add("on"); window.scrollTo(0,0);
+};});
+$("#refreshBtn").onclick=refresh;
+
+// initial render (baked) then live overlay
+renderToday(); renderSchedule(); renderStandings(); renderNews(); renderTeam(); renderTicker();
+refresh();
+setInterval(refresh,60000);
+
+// PWA service worker
+if("serviceWorker" in navigator && location.protocol.startsWith("http")){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+}
+</script>
+</body>
+</html>
