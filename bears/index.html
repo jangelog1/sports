@@ -117,6 +117,24 @@
   .lgrow .st.live{color:var(--winline)}
   .lgrow .st.final{color:var(--muted)}
   .lgrow .st.pre{color:var(--accent2)}
+  /* STADIUM */
+  .alert{background:linear-gradient(135deg,#3a1404,#1a1322);border:1px solid var(--orange);border-radius:14px;padding:16px;margin:10px 0 12px;position:relative;overflow:hidden}
+  .alert:before{content:"";position:absolute;inset:0;background:radial-gradient(120px 80px at 90% -20%,rgba(255,122,47,.25),transparent 70%);pointer-events:none}
+  .alert .big{display:inline-block;background:var(--orange);color:#fff;font-size:10.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:20px}
+  .alert h2{font-size:18px;margin:9px 0 6px;line-height:1.25}
+  .alert p{font-size:13px;color:var(--muted);line-height:1.5}
+  .tl{position:relative;margin:4px 0 0;padding-left:16px}
+  .tl:before{content:"";position:absolute;left:4px;top:4px;bottom:4px;width:2px;background:var(--line)}
+  .tlrow{position:relative;padding:8px 0 8px 4px;border-bottom:1px dashed var(--line)}
+  .tlrow:last-child{border-bottom:0}
+  .tlrow:before{content:"";position:absolute;left:-14px;top:13px;width:8px;height:8px;border-radius:50%;background:var(--accent2);box-shadow:0 0 0 3px var(--bg)}
+  .tlrow.hot:before{background:var(--orange);box-shadow:0 0 0 3px var(--bg),0 0 8px var(--orange)}
+  .tlrow .d{font-size:11px;font-weight:800;color:var(--accent2);letter-spacing:.3px}
+  .tlrow .t{font-size:13px;margin-top:2px;line-height:1.45}
+  .voice{display:flex;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:13px;line-height:1.45}
+  .voice:last-child{border-bottom:0}
+  .voice .who{font-weight:800;min-width:118px;flex:0 0 auto}
+  .voice .what{color:var(--muted)}
   /* NEWS */
   .news{display:block;text-decoration:none;color:var(--txt);background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px 14px;margin-bottom:8px;transition:.12s}
   .news:hover{border-color:var(--accent);background:var(--panel2)}
@@ -155,6 +173,7 @@
     <button data-t="standings">📊 Standings</button>
     <button data-t="league">📆 League</button>
     <button data-t="news">📰 News</button>
+    <button data-t="stadium">🏟️ Stadium</button>
     <button data-t="team">🐻 Team</button>
   </nav>
 
@@ -182,6 +201,10 @@
   <section id="news">
     <div class="note">📰 <b>Latest Bears news</b> — a verified snapshot gathered from real sources (ESPN, NFL.com, chicagobears.com, Chicago Sun-Times) as of <b>Jun 21, 2026</b>. Tap any item for the source.</div>
     <div id="newsEl"></div>
+  </section>
+
+  <section id="stadium">
+    <div id="stadiumEl"></div>
   </section>
 
   <section id="team">
@@ -281,7 +304,7 @@ const TEAM={
   qb:"Caleb Williams (Year 3)", stadium:"Soldier Field, Chicago",
   camp:"Mandatory minicamp wrapped Jun 11 · Training camp opens Jul 23 at Halas Hall"
 };
-const STADIUM_NOTE="Plays at Soldier Field for 2026. A proposed move to a new stadium in Hammond, IN was advancing as of Jun 2026 (site not finalized) — verify before relying.";
+const STADIUM_NOTE="Plays at Soldier Field for 2026. The board has voted to advance a new stadium in Hammond, IN (not final) — full timeline & details in the 🏟️ Stadium tab.";
 const STORYLINES=[
   "🐻 2025: NFC North champions (11–6) — first division title since 2018, first playoff win since 2010",
   "🎯 Ben Johnson enters Year 2; Caleb Williams Year 3 after a breakout sophomore season",
@@ -435,8 +458,60 @@ function renderTicker(){
   items.push(`<span class="ticker-item">2025 <b>11–6</b> <span class="mut">NFC North champions</span></span>`);
   items.push(`<span class="ticker-item">Camp opens <b>Jul 23</b> <span class="mut">Halas Hall</span></span>`);
   items.push(`<span class="ticker-item">Week 1 <b>@ Carolina</b> <span class="mut">Sep 13</span></span>`);
+  items.push(`<span class="ticker-item">🏟️ STADIUM <b>Hammond, IN</b> <span class="mut">board advances move · see Stadium tab</span></span>`);
   const one=items.join("");
   $("#tickerTrack").innerHTML=one+one;
+}
+
+/* ============ STADIUM (verified snapshot — developing story) ============ */
+const STADIUM={
+  updated:"Jun 21, 2026",
+  headline:"Bears vote to advance a new stadium in Hammond, Indiana",
+  status:"For the first time ever, the Bears' board voted (Jun 4–5, 2026) to <b>advance a domed stadium in Hammond, IN</b> (Wolf Lake / Lost Marsh area) — after an Illinois property-tax-relief bill died on May 31. It's a strong lean, <b>not final</b>: Arlington Heights, IL remains officially on the table, no exact Hammond parcel is locked, and environmental cleanup plus NFL approval still stand in the way.",
+  bottom:"Biggest move in the saga's history — but nothing is signed. The key date to watch is the <b>Illinois fall veto session (late Oct 2026)</b>, the state's last realistic window to win the team back (sooner if Gov. Pritzker calls a summer special session). Working timeline: ~spring 2027 groundbreaking, 2031 opening. Soldier Field lease runs through 2033.",
+  facts:[
+    ["Current home","Soldier Field (lease thru 2033, ~$6.5M/yr)"],
+    ["Leading site","Hammond, IN — Wolf Lake area (~25 mi from downtown)"],
+    ["Still alive","Arlington Heights, IL (Bears own the 326-acre site)"],
+    ["Bears commit","~$2B private toward construction"],
+    ["Indiana offer","~$1B bonded public financing (NW Indiana Stadium Authority)"],
+    ["Illinois ask","~$855M infrastructure + 40-yr property-tax freeze (stalled)"]
+  ],
+  timeline:[
+    ["Jun 4–5, 2026","🚨 Board votes to ADVANCE Hammond, IN — first-ever board site vote (parcel TBD; Arlington Hts still nominally alive)",1],
+    ["May 31, 2026","Illinois stadium-relief bill dies — Senate passed it ~3:39 AM, House adjourned with no vote → triggered the Indiana pivot",1],
+    ["May 26, 2026","Cook County Treasurer: 'megaprojects' bill ≈ $39M/yr Bears tax break (~$1.5B over 40 yrs)",0],
+    ["Apr 22, 2026","Illinois House passes 'megaprojects' tax-freeze bill 78-32; Bears want changes",0],
+    ["Feb 26, 2026","Indiana enacts SB 27 — creates NW Indiana Stadium Authority, names Hammond, ~$1B incentives",0],
+    ["Feb 24, 2026","Chicago Park District unveils $630M Soldier Field overhaul for a post-Bears future",0],
+    ["Dec 2025","Kevin Warren: search expands beyond Cook County, including NW Indiana",0],
+    ["May 16, 2025","Lakefront dome put 'on ice'; Bears pivot back to Arlington Heights",0],
+    ["Dec 12, 2024","Arlington Heights property-tax dispute settled (~$3.6M/yr; value $124.7M)",0],
+    ["Apr 24, 2024","Bears unveil ~$4.7B domed lakefront stadium proposal next to Soldier Field",0],
+    ["Feb 15, 2023","Bears buy the 326-acre former Arlington Park site for $197.2M",0]
+  ],
+  voices:[
+    ["Gov. Pritzker (IL)","Opposes public money for a 'billionaire-owned' team; open to a summer special session if lawmakers unite; flags Hammond 'toxic waste' (Jun 9)"],
+    ["Hammond Mayor McDermott","Pro-stadium — says the Bears are 'working hard' on the move"],
+    ["Arlington Hts Mayor Tinaglia","Wants the Bears; called Springfield's inaction 'a fumble'"],
+    ["Chicago Mayor Johnson","Wants the Bears in Chicago; opposed the Arlington incentives"]
+  ],
+  sources:"Cross-checked across Chicago Sun-Times, NFL.com, ESPN, NPR Illinois/WBEZ, WTTW, Capitol News Illinois & Daily Herald (latest reporting mid-Jun 2026)."
+};
+function renderStadium(){
+  let h=`<div class="alert"><span class="big">🚨 Big story</span>
+    <h2>🏟️ ${esc(STADIUM.headline)}</h2><p>${STADIUM.status}</p></div>`;
+  h+=`<div class="card"><h2>🧭 Where it stands</h2><div class="snapgrid">`+
+    STADIUM.facts.map(f=>`<div class="b"><div class="k">${esc(f[0])}</div><div class="v" style="font-size:13px">${esc(f[1])}</div></div>`).join("")+
+    `</div><div class="note" style="margin:12px 0 0">📌 <b>Bottom line.</b> ${STADIUM.bottom}</div></div>`;
+  h+=`<div class="card"><h2>🗓️ Timeline</h2><div class="tl">`+
+    STADIUM.timeline.map(t=>`<div class="tlrow ${t[2]?"hot":""}"><div class="d">${esc(t[0])}</div><div class="t">${esc(t[1])}</div></div>`).join("")+
+    `</div></div>`;
+  h+=`<div class="card"><h2>🗣️ Who wants what</h2>`+
+    STADIUM.voices.map(v=>`<div class="voice"><div class="who">${esc(v[0])}</div><div class="what">${esc(v[1])}</div></div>`).join("")+
+    `</div>`;
+  h+=`<div class="note">📚 ${esc(STADIUM.sources)} Developing story — verified snapshot as of <b>${esc(STADIUM.updated)}</b>, not a live feed.</div>`;
+  $("#stadiumEl").innerHTML=h;
 }
 
 /* ============ LEAGUE TAB (every NFL game, via ESPN) ============ */
@@ -516,7 +591,7 @@ document.querySelectorAll("nav button").forEach(b=>{b.onclick=()=>{
 $("#refreshBtn").onclick=refresh;
 
 // initial render (baked) then live overlay
-renderToday(); renderSchedule(); renderStandings(); renderNews(); renderTeam(); renderTicker();
+renderToday(); renderSchedule(); renderStandings(); renderNews(); renderStadium(); renderTeam(); renderTicker();
 refresh();
 leagueBoot();                    // load the live League tab (every NFL game)
 setInterval(refresh,60000);
