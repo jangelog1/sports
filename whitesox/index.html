@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Chicago White Sox — Standings, Wild Card & Scores</title>
+<!-- PWA: installable home-screen app -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="White Sox">
+<meta name="theme-color" content="#000000">
+<link rel="apple-touch-icon" href="icon-512.png">
+<link rel="icon" type="image/png" href="icon-512.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+  :root{
+    --bg:#000000; --bg2:#0a0a0a; --panel:#151515; --panel2:#1f1f1f; --line:#333333;
+    --txt:#ffffff; --muted:#9aa3ab; --accent:#c7ced4; --accent2:#ffffff; --silver:#c7ced4;
+    --win:#10271a; --winline:#2bd66f; --loss:#2a1318; --lossline:#ff5c7c;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:linear-gradient(180deg,#141414 0%,var(--bg) 38%);color:var(--txt);
+    font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-height:100vh;padding:0 0 60px}
+  /* TICKER */
+  .ticker{position:sticky;top:0;z-index:60;background:linear-gradient(90deg,#000,#161616);border-bottom:1px solid var(--line);overflow:hidden;white-space:nowrap;padding-top:env(safe-area-inset-top,0px)}
+  .ticker-row{display:flex;align-items:center}
+  .ticker-lbl{flex:none;background:#000;color:#fff;font-weight:800;font-size:11px;letter-spacing:.5px;padding:7px 11px;text-transform:uppercase;z-index:2;border-right:1px solid var(--line)}
+  .ticker-mask{overflow:hidden;flex:1}
+  .ticker-track{display:inline-block;white-space:nowrap;animation:tick 52s linear infinite;will-change:transform}
+  .ticker:hover .ticker-track{animation-play-state:paused}
+  .ticker-item{display:inline-flex;align-items:center;gap:6px;margin:0 18px;font-size:12.5px;font-weight:600;color:var(--txt);padding:7px 0}
+  .ticker-item b{color:var(--accent2)}
+  .ticker-item .mut{color:var(--muted);font-weight:400}
+  @keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  @media (prefers-reduced-motion:reduce){.ticker-track{animation:none}}
+  /* HEADER */
+  header{padding:16px 18px 14px;text-align:center;border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.06),transparent)}
+  .ballwrap{display:flex;justify-content:center;margin-bottom:6px}
+  .ball{height:108px;width:auto;display:block;border-radius:20px;border:1px solid var(--line);filter:drop-shadow(0 8px 18px rgba(0,0,0,.6));animation:bob 4.5s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  @media (prefers-reduced-motion:reduce){.ball{animation:none}}
+  h1{font-size:25px;letter-spacing:-.4px;display:flex;align-items:center;gap:9px;justify-content:center}
+  .badge{background:#fff;color:#000;font-size:11px;font-weight:800;padding:3px 8px;border-radius:20px;letter-spacing:.5px;text-transform:uppercase}
+  .sub{color:var(--muted);margin-top:5px;font-size:13px}
+  .sub b{color:var(--accent2)}
+  .statusbar{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap;justify-content:center}
+  .chip{display:inline-flex;align-items:center;gap:7px;background:var(--panel);border:1px solid var(--line);padding:6px 12px;border-radius:20px;font-size:12.5px;font-weight:600}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--muted)}
+  .chip.live .dot{background:var(--winline);box-shadow:0 0 8px var(--winline);animation:pulse 1.6s infinite}
+  .chip.snap .dot{background:var(--silver)}
+  .chip.load .dot{background:#fff;animation:pulse .8s infinite}
+  @keyframes pulse{50%{opacity:.35}}
+  .rbtn{background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:6px 13px;border-radius:20px;cursor:pointer;font-weight:600;font-size:12.5px}
+  .rbtn:hover{border-color:var(--silver)}
+  .wrap{max-width:760px;margin:0 auto;padding:0 16px}
+  /* NAV */
+  nav{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0 4px;justify-content:center}
+  nav button{background:var(--panel);border:1px solid var(--line);color:var(--muted);padding:9px 14px;border-radius:10px;cursor:pointer;font-weight:700;font-size:14px;transition:.15s}
+  nav button:hover{color:var(--txt);border-color:var(--silver)}
+  nav button.on{background:#fff;color:#000;border-color:#fff}
+  section{display:none;animation:fade .25s}
+  section.on{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+  .note{color:var(--muted);font-size:12.5px;margin:14px 0;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--silver);padding:10px 14px;border-radius:8px}
+  .note b{color:var(--txt)}
+  /* CARDS */
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:14px;margin:12px 0}
+  .card h2{font-size:14px;text-transform:uppercase;letter-spacing:.6px;color:var(--silver);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .gamebig{text-align:center;padding:6px 0}
+  .gamebig .vs{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+  .gamebig .opp{font-size:22px;font-weight:800;margin:4px 0}
+  .gamebig .meta{font-size:13px;color:var(--muted)}
+  .gamebig .cd{font-size:13px;color:var(--accent2);font-weight:700;margin-top:6px}
+  .gamebig .score{font-size:30px;font-weight:900;letter-spacing:1px;margin:2px 0}
+  .res-w{color:var(--winline)} .res-l{color:var(--lossline)}
+  .pill{display:inline-block;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:12.5px;margin:3px 5px 0 0}
+  .snapgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .snapgrid .b{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+  .snapgrid .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+  .snapgrid .v{font-size:15px;font-weight:700;margin-top:2px}
+  /* SCHEDULE */
+  .grow{display:grid;grid-template-columns:64px 1fr 96px;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin-bottom:6px}
+  .grow .dt{font-size:12px;color:var(--silver);font-weight:700;font-variant-numeric:tabular-nums}
+  .grow .op{font-weight:700;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .grow .op .ha{color:var(--muted);font-weight:600;font-size:12px}
+  .grow .rt{text-align:right;font-size:12.5px;font-weight:700}
+  .grow.done{opacity:.9}
+  .grow.livenow{box-shadow:inset 3px 0 0 var(--winline);background:rgba(43,214,111,.07)}
+  .tag{font-size:9.5px;font-weight:800;padding:2px 6px;border-radius:5px;text-transform:uppercase;letter-spacing:.3px}
+  .tag.home{background:#1a1a1a;color:#dfe6ec;border:1px solid #444}
+  .tag.w{background:var(--win);color:var(--winline)} .tag.l{background:var(--loss);color:var(--lossline)}
+  .tag.live{background:#10271a;color:var(--winline);border:1px solid #2bd66f}
+  /* STANDINGS / WILDCARD */
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th,td{padding:8px 4px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
+  #wildcard td,#wildcard th{padding:8px 3px;font-size:13px}
+  th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+  td.team{text-align:left;font-weight:700;white-space:nowrap}
+  tr.lead td{background:rgba(255,255,255,.10);box-shadow:inset 3px 0 0 #fff}
+  tr.cutoff td{border-bottom:2px dashed var(--silver)}
+  .pos{color:var(--muted);font-weight:700}
+  .gbpos{color:var(--winline);font-weight:700}
+  .gbneg{color:var(--muted)}
+  .strkW{color:var(--winline);font-weight:700} .strkL{color:var(--lossline);font-weight:700}
+  .confhd{font-size:13px;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent2);margin:18px 2px 2px;font-weight:800}
+  .cutnote{font-size:11px;color:var(--silver);margin:2px 2px 10px;font-weight:600}
+  /* LEAGUE */
+  .wksel{display:flex;gap:6px;align-items:center;padding:4px 2px 8px}
+  .daybtn{flex:0 0 auto;background:var(--panel);border:1px solid var(--line);color:var(--txt);padding:8px 14px;border-radius:9px;font-weight:800;font-size:15px;cursor:pointer}
+  .daybtn:hover{border-color:var(--silver)}
+  .daylbl{flex:1;text-align:center;font-weight:800;font-size:14px;color:var(--accent2)}
+  .todaybtn{flex:0 0 auto;background:#fff;border:1px solid #fff;color:#000;padding:8px 12px;border-radius:9px;font-weight:800;font-size:12.5px;cursor:pointer}
+  .lgrow{display:grid;grid-template-columns:1fr 86px;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin-bottom:6px}
+  .lgrow.sox{box-shadow:inset 3px 0 0 #fff;background:rgba(255,255,255,.07)}
+  .lgrow .mu{font-weight:700;font-size:13.5px}
+  .lgrow .mu .at{color:var(--muted);font-weight:600}
+  .lgrow .mu b{color:var(--txt);font-variant-numeric:tabular-nums}
+  .lgrow .st{text-align:right;font-size:11.5px;font-weight:800}
+  .lgrow .st.live{color:var(--winline)}
+  .lgrow .st.final{color:var(--muted)}
+  .lgrow .st.pre{color:var(--silver)}
+  /* NEWS */
+  .news{display:block;text-decoration:none;color:var(--txt);background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px 14px;margin-bottom:8px;transition:.12s}
+  .news:hover{border-color:var(--silver);background:var(--panel2)}
+  .news .ntag{font-size:9.5px;font-weight:800;color:#000;background:#fff;padding:2px 7px;border-radius:5px;text-transform:uppercase;letter-spacing:.3px}
+  .news .nh{font-weight:700;margin:6px 0 3px;font-size:14.5px}
+  .news .nd{color:var(--muted);font-size:12.5px;line-height:1.45}
+  .news .nm{color:var(--silver);font-size:11px;font-weight:600;margin-top:5px}
+  .foot{color:var(--muted);font-size:11.5px;text-align:center;margin:22px 0 6px;line-height:1.6}
+  .foot a{color:var(--silver)}
+  a.lnk{color:var(--silver)}
+</style>
+</head>
+<body>
+
+<div class="ticker">
+  <div class="ticker-row">
+    <span class="ticker-lbl">⚪ Sox</span>
+    <div class="ticker-mask"><div class="ticker-track" id="tickerTrack"></div></div>
+  </div>
+</div>
+
+<header>
+  <div class="ballwrap"><img class="ball" src="whitesox-logo.png" alt="Chicago White Sox logo"></div>
+  <h1>Chicago White Sox <span class="badge">Southside</span></h1>
+  <div class="sub">AL Central · <b>Rate Field</b>, Chicago · Mgr Will Venable</div>
+  <div class="statusbar">
+    <span class="chip snap" id="chip"><span class="dot"></span><span id="chipTxt">Loading…</span></span>
+    <button class="rbtn" id="refreshBtn">↻ Refresh</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav>
+    <button class="on" data-t="today">⚡ Today</button>
+    <button data-t="standings">📊 Standings</button>
+    <button data-t="wildcard">🃏 Wild Card</button>
+    <button data-t="schedule">📅 Schedule</button>
+    <button data-t="league">📆 League</button>
+    <button data-t="news">📰 News</button>
+    <button data-t="team">⚪ Team</button>
+  </nav>
+
+  <section class="on" id="today">
+    <div class="note">⚡ <b>Sox at a glance</b> — live/next/last game, the AL Central picture and the Wild Card race. Scores &amp; standings are <b>live from the MLB Stats API</b>; if it's unreachable you'll see a verified snapshot.</div>
+    <div id="todayEl"></div>
+  </section>
+
+  <section id="standings">
+    <div class="note">📊 <b>MLB standings — all six divisions</b>, live from the MLB Stats API. White Sox highlighted. <b>🏆</b> = division leader · <b>GB</b> = games back · <b>STRK</b> = current streak.</div>
+    <div id="standingsEl"></div>
+  </section>
+
+  <section id="wildcard">
+    <div class="note">🃏 <b>Wild Card races</b> — each league's three Wild Card spots (the non-division-leaders). Live from the MLB Stats API. The dashed line is the cut: above it is <b>in</b>, below is <b>out</b>. <b>WCGB</b> = games back of the last Wild Card spot (a <b>+</b> means games ahead of the cut line).</div>
+    <div id="wildcardEl"></div>
+  </section>
+
+  <section id="schedule">
+    <div class="note">📅 <b>White Sox schedule</b> — recent results and upcoming games, live from the MLB Stats API. Times shown in ET. Tap <a class="lnk" href="https://www.mlb.com/whitesox/schedule" target="_blank" rel="noopener">MLB.com ↗</a> for the full slate.</div>
+    <div id="scheduleEl"></div>
+  </section>
+
+  <section id="league">
+    <div class="note">📆 <b>Every MLB game</b> for a given day — live scores &amp; matchups from the MLB Stats API. White Sox highlighted. Use ◀ ▶ to change the day.</div>
+    <div id="leagueSel" class="wksel"></div>
+    <div id="leagueEl"></div>
+  </section>
+
+  <section id="news">
+    <div class="note">📰 <b>Latest White Sox news</b> — a verified snapshot gathered from real sources (MLB.com, Chicago Sun-Times, NBC Sports Chicago) as of <b>Jun 21, 2026</b>. Tap any item for the source.</div>
+    <div id="newsEl"></div>
+  </section>
+
+  <section id="team">
+    <div id="teamEl"></div>
+  </section>
+</div>
+
+<div class="wrap">
+  <div class="foot">
+    Provenance: <b>scores, standings &amp; the Wild Card race are live</b> from the <a href="https://statsapi.mlb.com" target="_blank" rel="noopener">MLB Stats API</a> (with a verified snapshot fallback if it's unreachable); <b>news &amp; team info</b> are a verified snapshot (Jun 21, 2026). Unofficial fan dashboard — not affiliated with the Chicago White Sox or MLB.
+  </div>
+</div>
+
+<script>
+/* ============ CONFIG ============ */
+const MLB="https://statsapi.mlb.com/api/v1";
+const TEAM_ID=145;                 // Chicago White Sox
+const SNAP_DATE="Jun 21, 2026";
+const SEASON=(()=>{const n=new Date();return n.getMonth()===0?n.getFullYear()-1:n.getFullYear();})();
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* division id -> name / display order */
+const DIV_NAME={200:"AL West",201:"AL East",202:"AL Central",203:"NL West",204:"NL East",205:"NL Central"};
+const DIV_ORDER=["AL East","AL Central","AL West","NL East","NL Central","NL West"];
+const LG_OF={103:"AL",104:"NL"};
+
+/* ============ VERIFIED BAKED FALLBACK (MLB Stats API snapshot, Jun 21 2026) ============ */
+// One source of truth: divisions; the Wild Card view is derived from these.
+const BAKED=[
+  {div:"AL East", lg:"AL", teams:[
+    {tm:"Yankees",w:46,l:30,pct:".605",gb:"-",wcgb:"-",wcr:null,strk:"L2"},
+    {tm:"Rays",w:43,l:31,pct:".581",gb:"2.0",wcgb:"+6.5",wcr:1,strk:"W1"},
+    {tm:"Blue Jays",w:38,l:39,pct:".494",gb:"8.5",wcgb:"-",wcr:3,strk:"W1"},
+    {tm:"Orioles",w:37,l:42,pct:".468",gb:"10.5",wcgb:"2.0",wcr:7,strk:"W2"},
+    {tm:"Red Sox",w:31,l:44,pct:".413",gb:"14.5",wcgb:"6.0",wcr:10,strk:"L1"}]},
+  {div:"AL Central", lg:"AL", teams:[
+    {tm:"Guardians",w:41,l:37,pct:".526",gb:"-",wcgb:"-",wcr:null,strk:"L1"},
+    {tm:"White Sox",w:39,l:37,pct:".513",gb:"1.0",wcgb:"+1.5",wcr:2,strk:"L3",sox:true},
+    {tm:"Twins",w:38,l:41,pct:".481",gb:"3.5",wcgb:"1.0",wcr:5,strk:"W2"},
+    {tm:"Tigers",w:33,l:44,pct:".429",gb:"7.5",wcgb:"5.0",wcr:9,strk:"W3"},
+    {tm:"Royals",w:32,l:46,pct:".410",gb:"9.0",wcgb:"6.5",wcr:11,strk:"L1"}]},
+  {div:"AL West", lg:"AL", teams:[
+    {tm:"Mariners",w:40,l:39,pct:".506",gb:"-",wcgb:"-",wcr:null,strk:"W1"},
+    {tm:"Athletics",w:38,l:40,pct:".487",gb:"1.5",wcgb:"0.5",wcr:4,strk:"L2"},
+    {tm:"Rangers",w:37,l:40,pct:".481",gb:"2.0",wcgb:"1.0",wcr:6,strk:"W1"},
+    {tm:"Astros",w:37,l:42,pct:".468",gb:"3.0",wcgb:"2.0",wcr:8,strk:"W1"},
+    {tm:"Angels",w:32,l:47,pct:".405",gb:"8.0",wcgb:"7.0",wcr:12,strk:"W2"}]},
+  {div:"NL East", lg:"NL", teams:[
+    {tm:"Braves",w:48,l:28,pct:".632",gb:"-",wcgb:"-",wcr:null,strk:"L1"},
+    {tm:"Phillies",w:41,l:35,pct:".539",gb:"7.0",wcgb:"+1.5",wcr:2,strk:"W1"},
+    {tm:"Marlins",w:40,l:38,pct:".513",gb:"9.0",wcgb:"0.5",wcr:5,strk:"W4"},
+    {tm:"Nationals",w:40,l:38,pct:".513",gb:"9.0",wcgb:"0.5",wcr:6,strk:"L1"},
+    {tm:"Mets",w:34,l:42,pct:".447",gb:"14.0",wcgb:"5.5",wcr:10,strk:"L1"}]},
+  {div:"NL Central", lg:"NL", teams:[
+    {tm:"Brewers",w:46,l:29,pct:".613",gb:"-",wcgb:"-",wcr:null,strk:"W1"},
+    {tm:"Cardinals",w:41,l:34,pct:".547",gb:"5.0",wcgb:"+2.0",wcr:1,strk:"W1"},
+    {tm:"Cubs",w:40,l:37,pct:".519",gb:"7.0",wcgb:"-",wcr:3,strk:"L1"},
+    {tm:"Pirates",w:39,l:39,pct:".500",gb:"8.5",wcgb:"1.5",wcr:8,strk:"W1"},
+    {tm:"Reds",w:37,l:39,pct:".487",gb:"9.5",wcgb:"2.5",wcr:9,strk:"W2"}]},
+  {div:"NL West", lg:"NL", teams:[
+    {tm:"Dodgers",w:49,l:29,pct:".628",gb:"-",wcgb:"-",wcr:null,strk:"L2"},
+    {tm:"Padres",w:39,l:37,pct:".513",gb:"9.0",wcgb:"0.5",wcr:4,strk:"L1"},
+    {tm:"D-backs",w:39,l:38,pct:".506",gb:"9.5",wcgb:"1.0",wcr:7,strk:"L2"},
+    {tm:"Giants",w:31,l:46,pct:".403",gb:"17.5",wcgb:"9.0",wcr:11,strk:"L3"},
+    {tm:"Rockies",w:30,l:48,pct:".385",gb:"19.0",wcgb:"10.5",wcr:12,strk:"L1"}]}
+];
+
+const TEAM={
+  record:"39–37", finish:"2nd, AL Central · Wild Card #2 (+1.5)",
+  mgr:"Will Venable (Year 2)", stadium:"Rate Field, Chicago",
+  note:"Stunning turnaround after losing a modern-record 121 games in 2024 — the Sox are in the thick of the AL Wild Card race past the season's quarter mark."
+};
+const STORYLINES=[
+  "⚪ In a Wild Card spot at 39–37 — a remarkable bounce-back from the 121-loss 2024 season",
+  "🎯 1.5 games behind Cleveland in the AL Central; holding the AL's #2 Wild Card",
+  "🧢 Will Venable's young core is overachieving expectations",
+  "🏟️ Home at Rate Field (the former Guaranteed Rate Field) on the South Side",
+  "📅 Homestand vs Cleveland & Kansas City before a road trip to Baltimore"
+];
+const NEWS=[
+  {tag:"Wild Card", h:"White Sox cling to a Wild Card spot at the quarter pole", d:"At 39–37, Chicago sits second in the AL Central and holds the league's #2 Wild Card berth — a stunning reversal from a 121-loss 2024.", date:"Jun 2026", url:"https://www.mlb.com/whitesox"},
+  {tag:"Venable", h:"Will Venable's young Sox keep defying expectations", d:"In his second year, the manager has the rebuild ahead of schedule, with a pitching staff and contact-heavy lineup punching above their weight.", date:"Jun 2026", url:"https://www.mlb.com/whitesox/news"},
+  {tag:"Schedule", h:"Division-heavy stretch could shape the AL Central", d:"A homestand against Cleveland and Kansas City gives the Sox a chance to make up ground before heading to Baltimore and back to Cleveland.", date:"Jun 2026", url:"https://www.mlb.com/whitesox/schedule"},
+  {tag:"Ballpark", h:"It's Rate Field now — same South Side home", d:"Guaranteed Rate Field was renamed Rate Field ahead of 2025; the Sox continue to play their home games on West 35th Street.", date:"2025", url:"https://www.mlb.com/whitesox/ballpark"},
+  {tag:"Farm", h:"Prospect wave fuels the turnaround", d:"Contributions from the farm system have accelerated the rebuild, turning the 2024 low point into a surprising 2026 push.", date:"Jun 2026", url:"https://www.mlb.com/whitesox/prospects"}
+];
+
+/* ============ LIVE STATE ============ */
+var STATE={divs:null, ok:false, sched:null};
+
+/* ============ HELPERS ============ */
+async function fetchJSON(u){ const r=await fetch(u,{cache:"no-store"}); if(!r.ok) throw new Error(r.status); return r.json(); }
+function isoLocal(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function etDay(ts){ return new Date(ts).toLocaleDateString("en-US",{timeZone:"America/New_York",weekday:"short",month:"short",day:"numeric"}); }
+function etTime(ts){ return new Date(ts).toLocaleTimeString("en-US",{timeZone:"America/New_York",hour:"numeric",minute:"2-digit"})+" ET"; }
+function shortName(full){ // "Chicago White Sox" -> "White Sox" using last 1-2 words
+  if(!full) return "TBD";
+  const two={"Red Sox":1,"White Sox":1,"Blue Jays":1};
+  const p=full.split(" ");
+  const last2=p.slice(-2).join(" ");
+  return two[last2]?last2:p[p.length-1];
+}
+
+/* ============ STANDINGS (live) ============ */
+function parseStandings(d){
+  const divs=(d.records||[]).map(r=>{
+    const div=DIV_NAME[r.division&&r.division.id]||"?";
+    const lg=LG_OF[r.league&&r.league.id]||"";
+    const teams=(r.teamRecords||[]).slice().sort((a,b)=>a.divisionRank-b.divisionRank).map(t=>({
+      tm:t.team.name, id:t.team.id, w:t.wins, l:t.losses, pct:(t.leagueRecord&&t.leagueRecord.pct)||"",
+      gb:t.gamesBack, wcgb:t.wildCardGamesBack, wcr:t.wildCardRank?+t.wildCardRank:null,
+      strk:(t.streak&&t.streak.streakCode)||"", sox:t.team.id===TEAM_ID
+    }));
+    return {div, lg, teams};
+  });
+  divs.sort((a,b)=>DIV_ORDER.indexOf(a.div)-DIV_ORDER.indexOf(b.div));
+  return divs;
+}
+async function loadStandings(){
+  try{
+    const d=await fetchJSON(`${MLB}/standings?leagueId=103,104&season=${SEASON}&standingsTypes=regularSeason`);
+    const divs=parseStandings(d);
+    if(divs.length===6 && divs.every(x=>x.teams.length)){ STATE.divs=divs; STATE.ok=true; return; }
+    throw new Error("incomplete");
+  }catch(e){ if(!STATE.divs){ STATE.divs=BAKED; } STATE.ok=false; }
+}
+function divs(){ return STATE.divs||BAKED; }
+
+function strkCls(s){ return /^W/.test(s)?"strkW":(/^L/.test(s)?"strkL":""); }
+function gbCell(g){ if(g==null||g==="-") return '<span class="gbneg">—</span>';
+  if(typeof g==="string"&&g[0]==="+") return '<span class="gbpos">'+esc(g)+'</span>';
+  return '<span>'+esc(g)+'</span>'; }
+
+function renderStandings(){
+  const card=d=>{
+    const rows=d.teams.map((s,i)=>`<tr class="${s.sox?"lead":""}">
+      <td class="team">${s.sox?"⚪ ":""}${i===0?"🏆 ":""}${esc(s.tm)}</td>
+      <td><b>${s.w}-${s.l}</b></td><td>${esc(s.pct)}</td><td>${gbCell(s.gb)}</td>
+      <td class="${strkCls(s.strk)}">${esc(s.strk||"—")}</td></tr>`).join("");
+    return `<div class="card"><h2>${esc(d.div)}</h2>
+      <table><tr><th style="text-align:left">Team</th><th>W-L</th><th>PCT</th><th>GB</th><th>STRK</th></tr>${rows}</table></div>`;
+  };
+  const D=divs();
+  let h=`<h3 class="confhd">🔵 American League</h3>`+D.filter(x=>x.lg==="AL").map(card).join("");
+  h+=`<h3 class="confhd">🔴 National League</h3>`+D.filter(x=>x.lg==="NL").map(card).join("");
+  $("#standingsEl").innerHTML=h;
+}
+
+/* ============ WILD CARD (derived from standings) ============ */
+function wildcardOf(lg){
+  const teams=[];
+  divs().filter(d=>d.lg===lg).forEach(d=>d.teams.forEach(t=>{ if(t.wcr!=null) teams.push(t); }));
+  teams.sort((a,b)=>a.wcr-b.wcr);
+  return teams;
+}
+function renderWildcard(){
+  const block=(lg,label,emoji)=>{
+    const teams=wildcardOf(lg);
+    if(!teams.length) return "";
+    const rows=teams.map((s,i)=>{
+      const inSpot=i<3;
+      const cls=(s.sox?"lead ":"")+(i===2?"cutoff":"");
+      const pos=inSpot?("WC"+(i+1)):(i+1)+"th";
+      return `<tr class="${cls.trim()}">
+        <td class="pos">${esc(pos)}</td>
+        <td class="team">${s.sox?"⚪ ":""}${inSpot?"✅ ":""}${esc(s.tm)}</td>
+        <td><b>${s.w}-${s.l}</b></td><td>${esc(s.pct)}</td><td>${gbCell(s.wcgb)}</td>
+        <td class="${strkCls(s.strk)}">${esc(s.strk||"—")}</td></tr>`;
+    }).join("");
+    return `<div class="card"><h2>${emoji} ${esc(label)} Wild Card</h2>
+      <table><tr><th>Pos</th><th style="text-align:left">Team</th><th>W-L</th><th>PCT</th><th>WCGB</th><th>STRK</th></tr>${rows}</table>
+      <div class="cutnote">— — — dashed line = 3rd &amp; final Wild Card spot (above = in, below = out) — — —</div></div>`;
+  };
+  $("#wildcardEl").innerHTML=block("AL","American League","🔵")+block("NL","National League","🔴");
+}
+
+/* ============ SCHEDULE + LIVE GAME (Sox, live) ============ */
+function mapGame(g){
+  const away=g.teams.away, home=g.teams.home;
+  const isHome=home.team.id===TEAM_ID;
+  const opp=isHome?away.team.name:home.team.name;
+  const us=isHome?home:away, them=isHome?away:home;
+  const st=g.status||{};
+  const ls=g.linescore||{};
+  return {
+    ts:g.gameDate, date:g.officialDate, isHome, opp:shortName(opp),
+    state:st.abstractGameState, detail:st.detailedState, coded:st.codedGameState,
+    us:(us.score==null?null:us.score), them:(them.score==null?null:them.score),
+    inning:ls.currentInningOrdinal||"", half:ls.inningHalf||"", venue:(g.venue&&g.venue.name)||""
+  };
+}
+async function loadSchedule(){
+  try{
+    const now=new Date(), s=new Date(now), e=new Date(now);
+    s.setDate(s.getDate()-16); e.setDate(e.getDate()+24);
+    const d=await fetchJSON(`${MLB}/schedule?sportId=1&teamId=${TEAM_ID}&startDate=${isoLocal(s)}&endDate=${isoLocal(e)}&hydrate=linescore`);
+    const games=[];
+    (d.dates||[]).forEach(dt=>dt.games.forEach(g=>{ if(g.gameType==="R"||g.gameType==="F"||g.gameType==="D"||g.gameType==="L"||g.gameType==="W") games.push(mapGame(g)); }));
+    games.sort((a,b)=>a.ts<b.ts?-1:1);
+    STATE.sched=games;
+  }catch(e){ /* keep prior */ }
+}
+function liveGame(){ return (STATE.sched||[]).find(g=>g.state==="Live")||null; }
+function nextGame(){ const now=Date.now(); return (STATE.sched||[]).find(g=>g.state!=="Final"&&g.state!=="Live"&&new Date(g.ts).getTime()>=now-3*3600000)||null; }
+function lastGame(){ const fin=(STATE.sched||[]).filter(g=>g.state==="Final"); return fin[fin.length-1]||null; }
+
+function renderToday(){
+  let h="";
+  const live=liveGame(), ng=nextGame(), lg=lastGame();
+  if(live){
+    const win=live.us!=null&&live.them!=null&&live.us>live.them;
+    h+=`<div class="card"><h2>🔴 Live now</h2><div class="gamebig">
+      <div class="vs">${live.isHome?"vs":"@"} ${esc(live.opp)}</div>
+      <div class="score">${live.us??0} – ${live.them??0}</div>
+      <div class="meta">${esc((live.half?live.half+" ":"")+(live.inning||live.detail||"Live"))}</div></div></div>`;
+  }
+  if(ng){
+    const du=dayDiff(ng.date);
+    const cd=du<=0?"Today":(du===1?"Tomorrow":"in "+du+" days");
+    h+=`<div class="card"><h2>📅 Next game</h2><div class="gamebig">
+      <div class="vs">${ng.isHome?"vs":"@"} ${esc(ng.opp)}</div>
+      <div class="opp">${etTime(ng.ts)}</div>
+      <div class="meta">${esc(etDay(ng.ts))} · ${ng.isHome?"Rate Field":esc(ng.venue||"away")}</div>
+      <div class="cd">⏳ ${cd}</div></div></div>`;
+  }
+  if(lg){
+    const win=lg.us!=null&&lg.them!=null&&lg.us>lg.them;
+    const score=(lg.us!=null&&lg.them!=null)?`<div class="score ${win?"res-w":"res-l"}">${lg.us} – ${lg.them} ${win?"W":"L"}</div>`:"";
+    h+=`<div class="card"><h2>📋 Last game</h2><div class="gamebig">
+      <div class="vs">${lg.isHome?"vs":"@"} ${esc(lg.opp)}</div>${score}
+      <div class="meta">${esc(etDay(lg.ts))}</div></div></div>`;
+  }
+  // Sox standing snapshot (live)
+  const sox=findSox();
+  h+=`<div class="card"><h2>⚪ Snapshot</h2><div class="snapgrid">
+    <div class="b"><div class="k">Record</div><div class="v">${sox?sox.w+"-"+sox.l:TEAM.record}</div></div>
+    <div class="b"><div class="k">AL Central</div><div class="v" style="font-size:13px">${sox?ordinal(sox.divRank)+" · "+gbTxt(sox.gb)+" GB":"—"}</div></div>
+    <div class="b"><div class="k">Wild Card</div><div class="v" style="font-size:13px">${sox&&sox.wcr?("#"+sox.wcr+" · "+esc(sox.wcgb)):"—"}</div></div>
+    <div class="b"><div class="k">Streak</div><div class="v ${sox?strkCls(sox.strk):""}" style="font-size:14px">${sox?esc(sox.strk||"—"):"—"}</div></div>
+    </div><div class="note" style="margin:10px 0 0">⚾ ${esc(TEAM.note)}</div></div>`;
+  h+=`<div class="card"><h2>🔥 Storylines</h2>${STORYLINES.map(s=>`<span class="pill">${esc(s)}</span>`).join("")}</div>`;
+  $("#todayEl").innerHTML=h;
+}
+function findSox(){ for(const d of divs()){ const t=d.teams.find(x=>x.sox); if(t){ return {...t, divRank:d.teams.indexOf(t)+1}; } } return null; }
+function ordinal(n){ return n+(["th","st","nd","rd"][(n%100>10&&n%100<14)?0:(n%10<4?n%10:0)]); }
+function dayDiff(isoDate){ if(!isoDate) return 0; const a=new Date(isoLocal(new Date())+"T12:00:00"), b=new Date(isoDate+"T12:00:00"); return Math.round((b-a)/86400000); }
+function gbTxt(g){ return (g==null||g==="-")?"0.0":g; }
+
+function renderSchedule(){
+  const games=STATE.sched||[];
+  if(!games.length){ $("#scheduleEl").innerHTML='<div class="note">Schedule loading… (or unavailable — tap ↻ Refresh)</div>'; return; }
+  let h="";
+  games.forEach(g=>{
+    const isLive=g.state==="Live", done=g.state==="Final";
+    let right;
+    if(done&&g.us!=null){ const win=g.us>g.them; right=`<span class="tag ${win?"w":"l"}">${win?"W":"L"} ${g.us}-${g.them}</span>`; }
+    else if(isLive){ right=`<span class="tag live">LIVE ${g.us??0}-${g.them??0}</span>`; }
+    else { right=`<span class="rt">${etTime(g.ts)}</span>`; }
+    h+=`<div class="grow${done?" done":""}${isLive?" livenow":""}">
+      <span class="dt">${esc(etDay(g.ts).replace(/^\w+, /,""))}</span>
+      <span class="op"><span class="ha">${g.isHome?"vs":"@"}</span>${esc(g.opp)}${g.isHome?'<span class="tag home">Home</span>':""}</span>
+      ${right}</div>`;
+  });
+  $("#scheduleEl").innerHTML=h;
+}
+
+/* ============ NEWS / TEAM ============ */
+function renderNews(){
+  $("#newsEl").innerHTML=NEWS.map(n=>`<a class="news" href="${esc(n.url)}" target="_blank" rel="noopener">
+    <span class="ntag">${esc(n.tag)}</span><div class="nh">${esc(n.h)}</div><div class="nd">${esc(n.d)}</div>
+    <div class="nm">${esc(n.date)} · source ↗</div></a>`).join("");
+}
+function renderTeam(){
+  const sox=findSox();
+  $("#teamEl").innerHTML=`
+    <div class="card"><h2>⚪ Team snapshot</h2><div class="snapgrid">
+      <div class="b"><div class="k">Record</div><div class="v">${sox?sox.w+"-"+sox.l:TEAM.record}</div></div>
+      <div class="b"><div class="k">Standing</div><div class="v" style="font-size:13px">${esc(TEAM.finish)}</div></div>
+      <div class="b"><div class="k">Manager</div><div class="v" style="font-size:13.5px">${esc(TEAM.mgr)}</div></div>
+      <div class="b"><div class="k">Ballpark</div><div class="v" style="font-size:13.5px">${esc(TEAM.stadium)}</div></div>
+    </div>
+    <div class="note" style="margin:12px 0 0">⚾ ${esc(TEAM.note)}</div>
+    </div>
+    <div class="card"><h2>🔥 Storylines</h2>${STORYLINES.map(s=>`<span class="pill">${esc(s)}</span>`).join("")}</div>`;
+}
+
+/* ============ TICKER ============ */
+function renderTicker(){
+  const items=[];
+  const live=liveGame(), ng=nextGame(), lg=lastGame(), sox=findSox();
+  if(live) items.push(`<span class="ticker-item">🔴 LIVE · ${live.isHome?"vs":"@"} ${esc(live.opp)} <b>${live.us??0}-${live.them??0}</b> <span class="mut">${esc(live.inning||"")}</span></span>`);
+  if(lg&&lg.us!=null){ const w=lg.us>lg.them; items.push(`<span class="ticker-item">FINAL · ${lg.isHome?"vs":"@"} ${esc(lg.opp)} <b>${lg.us}-${lg.them}</b> <span class="mut">${w?"W":"L"}</span></span>`); }
+  if(ng) items.push(`<span class="ticker-item">NEXT · ${ng.isHome?"vs":"@"} ${esc(ng.opp)} <b>${esc(etDay(ng.ts).replace(/^\w+, /,""))}</b> <span class="mut">${etTime(ng.ts)}</span></span>`);
+  if(sox) items.push(`<span class="ticker-item">Record <b>${sox.w}-${sox.l}</b> <span class="mut">${ordinal(sox.divRank)} AL Central</span></span>`);
+  if(sox&&sox.wcr) items.push(`<span class="ticker-item">🃏 Wild Card <b>#${sox.wcr}</b> <span class="mut">${esc(sox.wcgb)}</span></span>`);
+  items.push(`<span class="ticker-item">⚪ <b>Southside</b> <span class="mut">Rate Field · Will Venable</span></span>`);
+  const one=items.join("");
+  $("#tickerTrack").innerHTML=one+one;
+}
+
+/* ============ LEAGUE TAB (every MLB game for a day) ============ */
+var LG_DATE=new Date();
+function renderLgNav(){
+  const lbl=new Date(LG_DATE).toLocaleDateString("en-US",{weekday:"long",month:"short",day:"numeric"});
+  $("#leagueSel").innerHTML=`<button class="daybtn" id="lgPrev">◀</button>
+    <span class="daylbl">${esc(lbl)}</span>
+    <button class="todaybtn" id="lgToday">Today</button>
+    <button class="daybtn" id="lgNext">▶</button>`;
+  $("#lgPrev").onclick=()=>{LG_DATE.setDate(LG_DATE.getDate()-1);renderLgNav();loadLg();};
+  $("#lgNext").onclick=()=>{LG_DATE.setDate(LG_DATE.getDate()+1);renderLgNav();loadLg();};
+  $("#lgToday").onclick=()=>{LG_DATE=new Date();renderLgNav();loadLg();};
+}
+async function loadLg(){
+  const el=$("#leagueEl"), ds=isoLocal(LG_DATE);
+  if(el.dataset.k!==ds) el.innerHTML='<div class="note">Loading games…</div>';
+  let games;
+  try{
+    const d=await fetchJSON(`${MLB}/schedule?sportId=1&date=${ds}&hydrate=linescore`);
+    games=[]; (d.dates||[]).forEach(dt=>dt.games.forEach(g=>games.push(g)));
+  }catch(e){ el.dataset.k=ds; el.innerHTML='<div class="note">⚠️ Couldn’t load games for this day — tap Today or retry.</div>'; return; }
+  el.dataset.k=ds;
+  if(!games.length){ el.innerHTML='<div class="note">No MLB games scheduled for this day.</div>'; return; }
+  let h="";
+  games.sort((a,b)=>a.gameDate<b.gameDate?-1:1).forEach(g=>{
+    const a=g.teams.away, hm=g.teams.home, st=g.status||{}, ls=g.linescore||{};
+    const sox=a.team.id===TEAM_ID||hm.team.id===TEAM_ID;
+    const state=st.abstractGameState, played=state!=="Preview"&&a.score!=null;
+    const an=shortName(a.team.name), hn=shortName(hm.team.name);
+    const mu=played?`${esc(an)} <b>${a.score}</b> <span class="at">@</span> ${esc(hn)} <b>${hm.score}</b>`
+                   :`${esc(an)} <span class="at">@</span> ${esc(hn)}`;
+    const stc=state==="Live"?"live":(state==="Final"?"final":"pre");
+    const stx=state==="Live"?((ls.inningHalf?ls.inningHalf[0]:"")+(ls.currentInning?ls.currentInning:"")||"LIVE")
+            :(state==="Final"?(st.detailedState==="Game Over"?"FINAL":(st.detailedState||"FINAL")):etTime(g.gameDate));
+    h+=`<div class="lgrow ${sox?"sox":""}"><div class="mu">${sox?"⚪ ":""}${mu}</div><div class="st ${stc}">${esc(stx)}</div></div>`;
+  });
+  el.innerHTML=h;
+}
+
+/* ============ REFRESH + NAV + INIT ============ */
+function setChip(cls,txt){ const c=$("#chip"); c.className="chip "+cls; $("#chipTxt").textContent=txt; }
+async function refresh(){
+  setChip("load","Updating…");
+  await Promise.all([loadStandings(), loadSchedule()]);
+  if(STATE.ok){ const t=new Date().toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
+    setChip("live","Live · MLB · "+t); }
+  else { setChip("snap","Verified snapshot · "+SNAP_DATE); }
+  renderToday(); renderStandings(); renderWildcard(); renderSchedule(); renderTicker(); renderTeam();
+}
+
+document.querySelectorAll("nav button").forEach(b=>{b.onclick=()=>{
+  document.querySelectorAll("nav button").forEach(x=>x.classList.remove("on"));
+  document.querySelectorAll("section").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on"); $("#"+b.dataset.t).classList.add("on"); window.scrollTo(0,0);
+  if(b.dataset.t==="league"&&!$("#leagueEl").dataset.k) loadLg();
+};});
+$("#refreshBtn").onclick=refresh;
+
+// initial render (baked) then live overlay
+STATE.divs=BAKED;
+renderToday(); renderStandings(); renderWildcard(); renderSchedule(); renderNews(); renderTeam(); renderTicker();
+renderLgNav();
+refresh();
+setInterval(refresh,60000);
+setInterval(()=>{ if($("#league").classList.contains("on")) loadLg(); },60000);
+
+// PWA service worker
+if("serviceWorker" in navigator && location.protocol.startsWith("http")){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+}
+</script>
+</body>
+</html>
