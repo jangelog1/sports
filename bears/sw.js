@@ -1,5 +1,5 @@
 // Bears dashboard service worker — network-first so updates reach installed apps.
-const CACHE = 'bears-v1';
+const CACHE = 'bears-v2';
 const ASSETS = ['./', 'index.html', 'icon-512.png', 'bears-logo.png', 'manifest.webmanifest'];
 
 self.addEventListener('install', e => {
