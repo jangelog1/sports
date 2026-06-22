@@ -332,7 +332,9 @@ function parseArticles(j){
     url: a.url,
     src: srcName(a.domain),
     date: parseSeen(a.seendate),
-    img: a.socialimage || '',
+    // Force https — GDELT often returns http:// image URLs which a browser blocks as mixed
+    // content on our https page (silently, without firing onerror, leaving empty boxes).
+    img: (a.socialimage || '').replace(/^http:\/\//, 'https://'),
     country: a.sourcecountry || ''
   })).slice(0, 30);
 }
