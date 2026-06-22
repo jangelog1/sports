@@ -146,34 +146,25 @@
 
 <script>
 /* ============================ CONFIG ============================ */
-// Reputable outlets we surface first. NOTE: this list lives in JS, NOT in the GDELT
-// query — GDELT rejects long queries ("Your query was too short or too long.") and a
-// big `domain:… OR …` clause blows past that limit. So we query by keyword only (short,
-// robust) and rank these trusted domains to the top client-side; others fill in behind.
-const TRUSTED = new Set([
-  'reuters.com','apnews.com','bbc.com','bbc.co.uk','theguardian.com','aljazeera.com',
-  'npr.org','cnbc.com','dw.com','france24.com','abcnews.go.com','cbsnews.com','nbcnews.com',
-  'euronews.com','time.com','axios.com','politico.com','politico.eu','ft.com','economist.com',
-  'bloomberg.com','nytimes.com','washingtonpost.com','wsj.com','theatlantic.com','cnn.com',
-  'abc.net.au','scmp.com','japantimes.co.jp','thehindu.com','indianexpress.com',
-  'channelnewsasia.com','rte.ie','irishtimes.com','independent.co.uk','telegraph.co.uk',
-  'pbs.org','latimes.com','semafor.com','theconversation.com','sky.com','news.sky.com'
-]);
-function isTrusted(domain){
-  const d = (domain||'').replace(/^www\./,'');
-  if(TRUSTED.has(d)) return true;
-  for(const t of TRUSTED) if(d.endsWith('.' + t)) return true;  // subdomains, e.g. edition.cnn.com
-  return false;
-}
+// Eight major global wires/broadcasters. GDELT rejects long queries ("Your query was too
+// short or too long."), so we keep the domain whitelist small AND the per-category keywords
+// short (2 terms) — the combined query stays well under the limit that an earlier 12-domain
+// build tripped. Restricting to these domains is what gives the feed its quality; a
+// keyword-only query just surfaces fast-republishing local aggregators.
+const DOMAINS = [
+  'reuters.com','apnews.com','bbc.com','theguardian.com',
+  'aljazeera.com','npr.org','cnbc.com','dw.com'
+];
+const DOMCLAUSE = '(' + DOMAINS.map(d => 'domain:' + d).join(' OR ') + ')';
 
 // Tab → GDELT keyword clause. `top` is a broad reputable stream (its own query).
 const CATS = [
-  { k:'top',      label:'Top Headlines', kw:'(world OR international OR politics OR economy OR breaking)' },
-  { k:'world',    label:'World',         kw:'(world OR international OR global OR conflict OR diplomacy OR crisis)' },
-  { k:'politics', label:'Politics',      kw:'(election OR government OR parliament OR congress OR senate OR president OR policy)' },
-  { k:'business', label:'Business',      kw:'(economy OR markets OR business OR inflation OR stocks OR trade OR earnings)' },
-  { k:'tech',     label:'Tech',          kw:'(technology OR "artificial intelligence" OR software OR semiconductor OR startup OR cybersecurity)' },
-  { k:'science',  label:'Science',       kw:'(science OR research OR space OR climate OR physics OR discovery)' }
+  { k:'top',      label:'Top Headlines', kw:'(world OR politics)' },
+  { k:'world',    label:'World',         kw:'(world OR international)' },
+  { k:'politics', label:'Politics',      kw:'(election OR government)' },
+  { k:'business', label:'Business',      kw:'(economy OR markets)' },
+  { k:'tech',     label:'Tech',          kw:'(technology OR software)' },
+  { k:'science',  label:'Science',       kw:'(science OR research)' }
 ];
 
 const GDELT = 'https://api.gdeltproject.org/api/v2/doc/doc';
@@ -276,10 +267,8 @@ function fmtTime(d){
 /* ============================ FETCH =========================== */
 function buildURL(cat, days){
   const c = CATS.find(x => x.k === cat);
-  const q = encodeURIComponent(c.kw + ' sourcelang:english');   // keep it short — see TRUSTED note
-  // Pull GDELT's max (250). A pure newest-first slice skews to fast-republishing aggregators,
-  // so we cast a wide net and let the client-side trusted ranking surface the major outlets.
-  return `${GDELT}?query=${q}&mode=artlist&format=json&maxrecords=250&sort=datedesc&timespan=${days||1}d`;
+  const q = encodeURIComponent(c.kw + ' ' + DOMCLAUSE + ' sourcelang:english');
+  return `${GDELT}?query=${q}&mode=artlist&format=json&maxrecords=40&sort=datedesc&timespan=${days||2}d`;
 }
 
 async function fetchCat(cat, force){
@@ -330,25 +319,22 @@ async function tryFetch(cat, days){
 
 function parseArticles(j){
   const seen = new Set();
-  const arts = (j.articles || []).filter(a => {
+  // Every result is already from a whitelisted outlet, so just dedupe and keep GDELT's
+  // newest-first order. Dedupe on title too — wires get syndicated under multiple URLs.
+  const seenTitle = new Set();
+  return (j.articles || []).filter(a => {
     if(!a.url || !a.title || seen.has(a.url)) return false;
-    seen.add(a.url); return true;
+    const tk = a.title.trim().toLowerCase();
+    if(seenTitle.has(tk)) return false;
+    seen.add(a.url); seenTitle.add(tk); return true;
   }).map(a => ({
     title: a.title,
     url: a.url,
     src: srcName(a.domain),
     date: parseSeen(a.seendate),
     img: a.socialimage || '',
-    country: a.sourcecountry || '',
-    trusted: isTrusted(a.domain)
-  }));
-  // GDELT already returns newest-first. Float trusted outlets to the top while keeping
-  // that recency order; if there aren't enough trusted stories, the rest fill in behind.
-  const trusted = arts.filter(a => a.trusted);
-  const others  = arts.filter(a => !a.trusted);
-  // Trusted outlets lead. Once we have a solid block of them, show those alone; otherwise
-  // top up with the freshest remaining stories so a thin category still fills the page.
-  return (trusted.length >= 8 ? trusted : trusted.concat(others)).slice(0, 30);
+    country: a.sourcecountry || ''
+  })).slice(0, 30);
 }
 
 /* ============================ RENDER ========================== */
