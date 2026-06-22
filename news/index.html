@@ -277,7 +277,9 @@ function fmtTime(d){
 function buildURL(cat, days){
   const c = CATS.find(x => x.k === cat);
   const q = encodeURIComponent(c.kw + ' sourcelang:english');   // keep it short — see TRUSTED note
-  return `${GDELT}?query=${q}&mode=artlist&format=json&maxrecords=60&sort=datedesc&timespan=${days||1}d`;
+  // Pull GDELT's max (250). A pure newest-first slice skews to fast-republishing aggregators,
+  // so we cast a wide net and let the client-side trusted ranking surface the major outlets.
+  return `${GDELT}?query=${q}&mode=artlist&format=json&maxrecords=250&sort=datedesc&timespan=${days||1}d`;
 }
 
 async function fetchCat(cat, force){
@@ -344,7 +346,9 @@ function parseArticles(j){
   // that recency order; if there aren't enough trusted stories, the rest fill in behind.
   const trusted = arts.filter(a => a.trusted);
   const others  = arts.filter(a => !a.trusted);
-  return (trusted.length >= 12 ? trusted : trusted.concat(others)).slice(0, 30);
+  // Trusted outlets lead. Once we have a solid block of them, show those alone; otherwise
+  // top up with the freshest remaining stories so a thin category still fills the page.
+  return (trusted.length >= 8 ? trusted : trusted.concat(others)).slice(0, 30);
 }
 
 /* ============================ RENDER ========================== */
