@@ -350,7 +350,9 @@ function artHTML(a){
            (a.date ? `<span class="sep">·</span><span class="${fresh?'new':''}">${fresh?'NEW · ':''}${rel(a.date)}</span>` : '') +
            (a.country ? `<span class="sep">·</span><span>${esc(a.country)}</span>` : '');
   }
-  const thumb = a.img ? `<img class="thumb" src="${esc(a.img)}" loading="lazy" onerror="this.remove()" alt="">` : '';
+  // Show a thumbnail ONLY once it actually paints — many news images are huge or hotlink-
+  // protected, and an empty placeholder box looks broken. Hidden until onload; gone on error.
+  const thumb = a.img ? `<img class="thumb" src="${esc(a.img)}" loading="lazy" alt="" style="display:none" onload="this.style.display='block'" onerror="this.remove()">` : '';
   return `<a class="art" href="${esc(a.url)}" target="_blank" rel="noopener">
     ${thumb}
     <div class="body"><div class="t">${esc(a.title)}</div><div class="m">${meta}</div></div>
