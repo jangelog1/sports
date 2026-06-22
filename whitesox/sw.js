@@ -1,5 +1,5 @@
 // White Sox dashboard service worker — network-first so updates reach installed apps.
-const CACHE = 'sox-v2';
+const CACHE = 'sox-v3';
 const ASSETS = ['./', 'index.html', 'icon-512.png', 'whitesox-logo.png', 'manifest.webmanifest'];
 
 self.addEventListener('install', e => {

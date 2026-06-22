@@ -53,6 +53,7 @@
   @keyframes pulse{50%{opacity:.35}}
   .rbtn{background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:6px 13px;border-radius:20px;cursor:pointer;font-weight:600;font-size:12.5px}
   .rbtn:hover{border-color:var(--silver)}
+  .refrow{display:flex;justify-content:flex-end;margin:2px 0 0}
   .wrap{max-width:760px;margin:0 auto;padding:0 16px}
   /* NAV */
   nav{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0 4px;justify-content:center}
@@ -169,11 +170,13 @@
 
   <section id="standings">
     <div class="note">📊 <b>MLB standings — all six divisions</b>, live from the MLB Stats API. White Sox highlighted. <b>🏆</b> = division leader · <b>GB</b> = games back · <b>STRK</b> = current streak.</div>
+    <div class="refrow"><button class="rbtn" data-ref>↻ Refresh standings</button></div>
     <div id="standingsEl"></div>
   </section>
 
   <section id="wildcard">
     <div class="note">🃏 <b>Wild Card races</b> — each league's three Wild Card spots (the non-division-leaders). Live from the MLB Stats API. The dashed line is the cut: above it is <b>in</b>, below is <b>out</b>. <b>WCGB</b> = games back of the last Wild Card spot (a <b>+</b> means games ahead of the cut line).</div>
+    <div class="refrow"><button class="rbtn" data-ref>↻ Refresh Wild Card</button></div>
     <div id="wildcardEl"></div>
   </section>
 
@@ -548,6 +551,9 @@ document.querySelectorAll("nav button").forEach(b=>{b.onclick=()=>{
   if(b.dataset.t==="league"&&!$("#leagueEl").dataset.k) loadLg();
 };});
 $("#refreshBtn").onclick=refresh;
+document.querySelectorAll("[data-ref]").forEach(b=>b.onclick=async()=>{
+  const t=b.textContent; b.disabled=true; b.textContent="↻ Updating…"; await refresh(); b.textContent=t; b.disabled=false;
+});
 
 // initial render (baked) then live overlay
 STATE.divs=BAKED;
