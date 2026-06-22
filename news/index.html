@@ -146,13 +146,25 @@
 
 <script>
 /* ============================ CONFIG ============================ */
-// Reputable English-language outlets we trust. GDELT `domain:` matches subdomains too.
-const DOMAINS = [
-  'reuters.com','apnews.com','bbc.co.uk','bbc.com','theguardian.com','aljazeera.com',
-  'npr.org','cnbc.com','dw.com','france24.com','abcnews.go.com','cbsnews.com',
-  'nbcnews.com','euronews.com','time.com','axios.com'
-];
-const DOMCLAUSE = '(' + DOMAINS.map(d => 'domain:' + d).join(' OR ') + ')';
+// Reputable outlets we surface first. NOTE: this list lives in JS, NOT in the GDELT
+// query — GDELT rejects long queries ("Your query was too short or too long.") and a
+// big `domain:… OR …` clause blows past that limit. So we query by keyword only (short,
+// robust) and rank these trusted domains to the top client-side; others fill in behind.
+const TRUSTED = new Set([
+  'reuters.com','apnews.com','bbc.com','bbc.co.uk','theguardian.com','aljazeera.com',
+  'npr.org','cnbc.com','dw.com','france24.com','abcnews.go.com','cbsnews.com','nbcnews.com',
+  'euronews.com','time.com','axios.com','politico.com','politico.eu','ft.com','economist.com',
+  'bloomberg.com','nytimes.com','washingtonpost.com','wsj.com','theatlantic.com','cnn.com',
+  'abc.net.au','scmp.com','japantimes.co.jp','thehindu.com','indianexpress.com',
+  'channelnewsasia.com','rte.ie','irishtimes.com','independent.co.uk','telegraph.co.uk',
+  'pbs.org','latimes.com','semafor.com','theconversation.com','sky.com','news.sky.com'
+]);
+function isTrusted(domain){
+  const d = (domain||'').replace(/^www\./,'');
+  if(TRUSTED.has(d)) return true;
+  for(const t of TRUSTED) if(d.endsWith('.' + t)) return true;  // subdomains, e.g. edition.cnn.com
+  return false;
+}
 
 // Tab → GDELT keyword clause. `top` is a broad reputable stream (its own query).
 const CATS = [
@@ -264,8 +276,8 @@ function fmtTime(d){
 /* ============================ FETCH =========================== */
 function buildURL(cat, days){
   const c = CATS.find(x => x.k === cat);
-  const q = encodeURIComponent(c.kw + ' ' + DOMCLAUSE + ' sourcelang:english');
-  return `${GDELT}?query=${q}&mode=artlist&format=json&maxrecords=30&sort=datedesc&timespan=${days||1}d`;
+  const q = encodeURIComponent(c.kw + ' sourcelang:english');   // keep it short — see TRUSTED note
+  return `${GDELT}?query=${q}&mode=artlist&format=json&maxrecords=60&sort=datedesc&timespan=${days||1}d`;
 }
 
 async function fetchCat(cat, force){
@@ -316,7 +328,7 @@ async function tryFetch(cat, days){
 
 function parseArticles(j){
   const seen = new Set();
-  return (j.articles || []).filter(a => {
+  const arts = (j.articles || []).filter(a => {
     if(!a.url || !a.title || seen.has(a.url)) return false;
     seen.add(a.url); return true;
   }).map(a => ({
@@ -325,8 +337,14 @@ function parseArticles(j){
     src: srcName(a.domain),
     date: parseSeen(a.seendate),
     img: a.socialimage || '',
-    country: a.sourcecountry || ''
+    country: a.sourcecountry || '',
+    trusted: isTrusted(a.domain)
   }));
+  // GDELT already returns newest-first. Float trusted outlets to the top while keeping
+  // that recency order; if there aren't enough trusted stories, the rest fill in behind.
+  const trusted = arts.filter(a => a.trusted);
+  const others  = arts.filter(a => !a.trusted);
+  return (trusted.length >= 12 ? trusted : trusted.concat(others)).slice(0, 30);
 }
 
 /* ============================ RENDER ========================== */
