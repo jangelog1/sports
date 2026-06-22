@@ -177,10 +177,11 @@ const DOMCLAUSE = '(' + DOMAINS.map(d => 'domain:' + d).join(' OR ') + ')';
 const FR_DOMAINS = ['lemonde.fr','lefigaro.fr','francetvinfo.fr','liberation.fr','rfi.fr','leparisien.fr'];
 const FR_DOMCLAUSE = '(' + FR_DOMAINS.map(d => 'domain:' + d).join(' OR ') + ')';
 
-// Sports-dedicated outlets for the Sports tab. ESPN / Sky Sports / CBS Sports publish ONLY
-// sport, so even a loose keyword returns real sports stories (the general wires alone matched
-// non-sports articles that merely mention "football"). BBC + Guardian add wider coverage.
-const SP_DOMAINS = ['espn.com','skysports.com','cbssports.com','bbc.com','theguardian.com','reuters.com'];
+// Sports-ONLY outlets for the Sports tab. Two lessons from GDELT: (1) general-news domains
+// (BBC/Guardian) pollute — their site chrome contains "football"/"sport" so politics articles
+// match the keyword; (2) ESPN/Sky/CBS aren't indexed by GDELT. These high-volume sports-pure
+// sites ARE indexed (Bleacher Report confirmed), so results are reliably sport.
+const SP_DOMAINS = ['bleacherreport.com','sportskeeda.com','givemesport.com','90min.com','sportingnews.com','si.com'];
 const SP_DOMCLAUSE = '(' + SP_DOMAINS.map(d => 'domain:' + d).join(' OR ') + ')';
 
 // Tab → GDELT keyword clause. Keep `kw` short (2 terms). `lang`/`dom` override the defaults
@@ -301,7 +302,8 @@ function srcName(domain){
     'nbcnews.com':'NBC News','euronews.com':'Euronews','time.com':'TIME','axios.com':'Axios',
     'lemonde.fr':'Le Monde','lefigaro.fr':'Le Figaro','francetvinfo.fr':'France Info',
     'liberation.fr':'Libération','rfi.fr':'RFI','leparisien.fr':'Le Parisien',
-    'espn.com':'ESPN','skysports.com':'Sky Sports','cbssports.com':'CBS Sports'};
+    'bleacherreport.com':'Bleacher Report','sportskeeda.com':'Sportskeeda','givemesport.com':'GiveMeSport',
+    '90min.com':'90min','sportingnews.com':'Sporting News','si.com':'Sports Illustrated'};
   if(map[domain]) return map[domain];
   return (domain||'').replace(/^www\./,'').split('.')[0].replace(/^\w/,c=>c.toUpperCase());
 }
