@@ -177,6 +177,12 @@ const DOMCLAUSE = '(' + DOMAINS.map(d => 'domain:' + d).join(' OR ') + ')';
 const FR_DOMAINS = ['lemonde.fr','lefigaro.fr','francetvinfo.fr','liberation.fr','rfi.fr','leparisien.fr'];
 const FR_DOMCLAUSE = '(' + FR_DOMAINS.map(d => 'domain:' + d).join(' OR ') + ')';
 
+// Sports-dedicated outlets for the Sports tab. ESPN / Sky Sports / CBS Sports publish ONLY
+// sport, so even a loose keyword returns real sports stories (the general wires alone matched
+// non-sports articles that merely mention "football"). BBC + Guardian add wider coverage.
+const SP_DOMAINS = ['espn.com','skysports.com','cbssports.com','bbc.com','theguardian.com','reuters.com'];
+const SP_DOMCLAUSE = '(' + SP_DOMAINS.map(d => 'domain:' + d).join(' OR ') + ')';
+
 // Tab → GDELT keyword clause. Keep `kw` short (2 terms). `lang`/`dom` override the defaults
 // (English wires) — used by the French tab to pull French-language news from French outlets.
 const CATS = [
@@ -186,7 +192,7 @@ const CATS = [
   { k:'business', label:'Business',      kw:'(economy OR markets)' },
   { k:'tech',     label:'Tech',          kw:'(technology OR software)' },
   { k:'science',  label:'Science',       kw:'(science OR research)' },
-  { k:'sports',   label:'Sports',        kw:'(sport OR football)' },
+  { k:'sports',   label:'Sports',        kw:'(sport OR football)', dom:SP_DOMCLAUSE },
   { k:'french',   label:'Français',      kw:'(France OR monde)', lang:'french', dom:FR_DOMCLAUSE }
 ];
 
@@ -294,7 +300,8 @@ function srcName(domain){
     'dw.com':'DW','france24.com':'France 24','abcnews.go.com':'ABC News','cbsnews.com':'CBS News',
     'nbcnews.com':'NBC News','euronews.com':'Euronews','time.com':'TIME','axios.com':'Axios',
     'lemonde.fr':'Le Monde','lefigaro.fr':'Le Figaro','francetvinfo.fr':'France Info',
-    'liberation.fr':'Libération','rfi.fr':'RFI','leparisien.fr':'Le Parisien'};
+    'liberation.fr':'Libération','rfi.fr':'RFI','leparisien.fr':'Le Parisien',
+    'espn.com':'ESPN','skysports.com':'Sky Sports','cbssports.com':'CBS Sports'};
   if(map[domain]) return map[domain];
   return (domain||'').replace(/^www\./,'').split('.')[0].replace(/^\w/,c=>c.toUpperCase());
 }
