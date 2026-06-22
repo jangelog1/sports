@@ -7,71 +7,80 @@
 <!-- PWA: installable home-screen app -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="World News">
-<meta name="theme-color" content="#0a1120">
+<meta name="theme-color" content="#f3ede0">
 <link rel="apple-touch-icon" href="icon-512.png">
 <link rel="icon" type="image/png" href="icon-512.png">
 <link rel="manifest" href="manifest.webmanifest">
 <style>
+  /* ===== NEWSPAPER THEME — cream newsprint, black serif ink, high contrast ===== */
   :root{
-    --bg:#0a1120; --bg2:#0d1730; --card:#131e36; --card2:#18244180; --line:#27324d;
-    --txt:#eef2f8; --mut:#93a1ba; --mut2:#6f7e98;
-    --accent:#f5a623; --breaking:#ef4444; --link:#5ea0ff; --live:#2bd66f;
+    --bg:#f3ede0; --bg2:#ece4d3; --card:#fbf7ee; --card2:#efe7d6; --line:#cfc4ad;
+    --txt:#1b1813; --mut:#5c5341; --mut2:#857a63;
+    --accent:#8b0000; --breaking:#8b0000; --link:#0b3d91; --live:#1d6b2f; --gold:#9a7b1f;
+    --serif:Georgia,"Times New Roman","Iowan Old Style",Cambria,serif;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:radial-gradient(900px 520px at 50% -8%,#16233f 0%,var(--bg) 56%);color:var(--txt);
-    font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    min-height:100vh;padding:0 0 50px;-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--txt);
+    font:16px/1.5 var(--serif);
+    min-height:100vh;padding:0 0 50px;-webkit-text-size-adjust:100%;
+    overflow-wrap:break-word;word-break:normal}
 
-  /* TICKER */
-  .ticker{position:sticky;top:0;z-index:60;background:linear-gradient(90deg,#0b1426,#10203f);
-    border-bottom:1px solid var(--line);overflow:hidden;white-space:nowrap;padding-top:env(safe-area-inset-top,0px)}
+  /* TICKER — "stop press" black bar */
+  .ticker{position:sticky;top:0;z-index:60;background:#1b1813;color:#f3ede0;
+    border-bottom:3px double #1b1813;overflow:hidden;white-space:nowrap;padding-top:env(safe-area-inset-top,0px)}
   .ticker-row{display:flex;align-items:center}
-  .ticker-lbl{flex:none;background:var(--breaking);color:#fff;font-weight:800;font-size:11px;letter-spacing:.6px;
-    padding:8px 11px;text-transform:uppercase;z-index:2;display:flex;align-items:center;gap:6px}
+  .ticker-lbl{flex:none;background:var(--breaking);color:#fff;font-weight:800;font-size:11px;letter-spacing:1px;
+    padding:8px 11px;text-transform:uppercase;z-index:2;display:flex;align-items:center;gap:6px;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
   .ticker-lbl .d{width:7px;height:7px;border-radius:50%;background:#fff;animation:pulse 1.4s infinite}
   .ticker-mask{overflow:hidden;flex:1}
   .ticker-track{display:inline-block;white-space:nowrap;animation:tick 60s linear infinite;will-change:transform;padding-left:100%}
   .ticker:hover .ticker-track,.ticker:active .ticker-track{animation-play-state:paused}
-  .ticker-track span{font-size:12.5px;color:#d7e2f3}
-  .ticker-track b{color:var(--accent);margin:0 6px 0 14px}
+  .ticker-track span{font-size:13px;color:#f0e9d8;font-style:italic}
+  .ticker-track b{color:#e6b800;margin:0 6px 0 16px;font-style:normal}
   @keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
   @keyframes pulse{50%{opacity:.3}}
   @media (prefers-reduced-motion:reduce){.ticker-track{animation:none;padding-left:14px}}
 
-  .wrap{max-width:600px;margin:0 auto;padding:0 14px}
+  .wrap{max-width:620px;margin:0 auto;padding:0 14px}
 
-  /* HEADER */
-  header{display:flex;align-items:center;gap:12px;padding:16px 2px 12px}
+  /* HEADER — masthead */
+  header{display:flex;align-items:center;gap:12px;padding:16px 2px 10px;
+    border-bottom:3px double #1b1813;margin-bottom:4px}
   header .logo{font-size:30px;line-height:1}
   header .ht{flex:1;min-width:0}
-  header h1{font-size:20px;font-weight:800;letter-spacing:.2px}
-  header .sub{color:var(--mut);font-size:11.5px;margin-top:2px}
-  .refresh{flex:none;width:42px;height:42px;border-radius:12px;border:1px solid var(--line);
+  header h1{font-family:var(--serif);font-size:30px;font-weight:900;letter-spacing:.3px;line-height:1.05}
+  header .sub{color:var(--mut);font-size:11px;margin-top:4px;text-transform:uppercase;letter-spacing:1.5px;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  .refresh{flex:none;width:42px;height:42px;border-radius:6px;border:1px solid var(--line);
     background:var(--card);color:var(--txt);font-size:18px;cursor:pointer;transition:transform .15s,border-color .15s}
   .refresh:active{transform:scale(.92)}
-  .refresh:hover{border-color:var(--accent)}
+  .refresh:hover{border-color:var(--accent);color:var(--accent)}
   .refresh.spin{animation:sp .8s linear infinite}
   @keyframes sp{to{transform:rotate(360deg)}}
 
   /* STATUS CHIP */
-  .status{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--mut);
-    padding:0 2px 12px}
+  .status{display:flex;align-items:center;flex-wrap:wrap;gap:7px;font-size:11.5px;color:var(--mut);
+    padding:10px 2px 12px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
   .chip{display:inline-flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);
-    border-radius:999px;padding:4px 10px;font-weight:700;font-size:11px}
+    border-radius:4px;padding:4px 10px;font-weight:800;font-size:10.5px;letter-spacing:.5px;text-transform:uppercase}
   .chip .dot{width:7px;height:7px;border-radius:50%;background:var(--mut2)}
-  .chip.live .dot{background:var(--live);box-shadow:0 0 8px var(--live);animation:pulse 1.6s infinite}
-  .chip.load .dot{background:var(--accent);animation:pulse .8s infinite}
+  .chip.live{border-color:var(--live);color:var(--live)}
+  .chip.live .dot{background:var(--live);animation:pulse 1.6s infinite}
+  .chip.load .dot{background:var(--gold);animation:pulse .8s infinite}
+  .chip.snap{border-color:var(--accent);color:var(--accent)}
   .chip.snap .dot{background:var(--accent)}
 
   /* NAV */
-  nav{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 14px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  nav{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 14px;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
   nav::-webkit-scrollbar{display:none}
-  nav button{flex:none;background:var(--card);border:1px solid var(--line);color:var(--mut);
-    font-size:13px;font-weight:700;padding:9px 14px;border-radius:999px;cursor:pointer;
+  nav button{flex:none;background:var(--card);border:1px solid var(--line);color:var(--txt);
+    font-size:13px;font-weight:700;padding:9px 14px;border-radius:4px;cursor:pointer;
     transition:all .15s;white-space:nowrap}
-  nav button.on{background:var(--accent);border-color:var(--accent);color:#1a1200}
+  nav button.on{background:#1b1813;border-color:#1b1813;color:#f3ede0}
   nav button:active{transform:scale(.96)}
 
   /* SECTIONS */
@@ -79,33 +88,40 @@
   section.on{display:block}
   @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
 
-  .secnote{color:var(--mut);font-size:12px;padding:0 2px 10px;line-height:1.5}
-  .banner{background:#2a1f0a;border:1px solid #6b5418;color:#f3d79a;font-size:12px;
-    border-radius:12px;padding:10px 12px;margin-bottom:12px;line-height:1.5}
+  .secnote{color:var(--mut);font-size:11.5px;padding:0 2px 10px;line-height:1.5;text-transform:uppercase;
+    letter-spacing:1px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    border-bottom:1px solid var(--line);margin-bottom:12px;padding-bottom:8px}
+  .banner{background:#fbf1d8;border:1px solid var(--gold);color:#5a4410;font-size:12.5px;
+    border-radius:4px;padding:10px 12px;margin-bottom:14px;line-height:1.5}
 
   /* ARTICLE CARD */
-  .arts{display:flex;flex-direction:column;gap:10px}
-  a.art{display:flex;gap:12px;text-decoration:none;color:var(--txt);background:var(--card);
-    border:1px solid var(--line);border-radius:14px;padding:12px;transition:transform .12s,border-color .12s,background .12s}
-  a.art:active{transform:scale(.99)}
-  a.art:hover{border-color:var(--accent);background:#16223e}
-  a.art .thumb{flex:none;width:84px;height:64px;border-radius:10px;object-fit:cover;background:var(--card2);
+  .arts{display:flex;flex-direction:column;gap:0}
+  a.art{display:flex;gap:12px;text-decoration:none;color:var(--txt);background:transparent;
+    border-bottom:1px solid var(--line);padding:14px 4px;transition:background .12s}
+  a.art:first-child{border-top:1px solid var(--line)}
+  a.art:active{background:var(--card2)}
+  a.art:hover{background:var(--card)}
+  a.art .thumb{flex:none;width:84px;height:64px;border-radius:3px;object-fit:cover;background:var(--card2);
     border:1px solid var(--line)}
   a.art .body{flex:1;min-width:0}
-  a.art .t{font-size:14.5px;font-weight:700;line-height:1.34;
-    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-  a.art .m{margin-top:6px;font-size:11.5px;color:var(--mut);display:flex;flex-wrap:wrap;align-items:center;gap:6px}
-  a.art .m .src{color:var(--link);font-weight:700}
+  a.art .t{font-family:var(--serif);font-size:17px;font-weight:700;line-height:1.28;color:var(--txt);
+    overflow-wrap:break-word;
+    display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+  a.art .m{margin-top:6px;font-size:11.5px;color:var(--mut);display:flex;flex-wrap:wrap;align-items:center;gap:5px;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  a.art .m .src{color:var(--link);font-weight:800;text-transform:uppercase;letter-spacing:.3px;font-size:11px}
   a.art .m .sep{color:var(--mut2)}
   a.art .m .new{color:var(--breaking);font-weight:800}
   a.art .go{flex:none;align-self:center;color:var(--mut2);font-size:18px;font-weight:800}
 
-  .skel{height:88px;border-radius:14px;background:linear-gradient(90deg,#131e36 25%,#1a2742 50%,#131e36 75%);
+  .skel{height:80px;border-bottom:1px solid var(--line);
+    background:linear-gradient(90deg,#f3ede0 25%,#e8dfcc 50%,#f3ede0 75%);
     background-size:200% 100%;animation:sh 1.3s infinite}
   @keyframes sh{to{background-position:-200% 0}}
   .empty{color:var(--mut);font-size:13px;text-align:center;padding:30px 10px;line-height:1.6}
 
-  footer{color:var(--mut2);font-size:11px;text-align:center;margin-top:26px;line-height:1.7;padding:0 8px}
+  footer{color:var(--mut2);font-size:11px;text-align:center;margin-top:26px;line-height:1.7;padding:14px 8px 0;
+    border-top:3px double #1b1813;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
   footer a{color:var(--link);text-decoration:none}
 </style>
 </head>
@@ -122,8 +138,8 @@
   <header>
     <div class="logo">🌍</div>
     <div class="ht">
-      <h1>World News</h1>
-      <div class="sub">Top global headlines · grouped by beat</div>
+      <h1>The World News</h1>
+      <div class="sub">World Edition · Live global headlines</div>
     </div>
     <button class="refresh" id="refreshBtn" title="Refresh" aria-label="Refresh">↻</button>
   </header>
@@ -157,14 +173,21 @@ const DOMAINS = [
 ];
 const DOMCLAUSE = '(' + DOMAINS.map(d => 'domain:' + d).join(' OR ') + ')';
 
-// Tab → GDELT keyword clause. `top` is a broad reputable stream (its own query).
+// French outlets for the "Français" tab (kept short for GDELT's query-length cap).
+const FR_DOMAINS = ['lemonde.fr','lefigaro.fr','francetvinfo.fr','liberation.fr','rfi.fr','leparisien.fr'];
+const FR_DOMCLAUSE = '(' + FR_DOMAINS.map(d => 'domain:' + d).join(' OR ') + ')';
+
+// Tab → GDELT keyword clause. Keep `kw` short (2 terms). `lang`/`dom` override the defaults
+// (English wires) — used by the French tab to pull French-language news from French outlets.
 const CATS = [
   { k:'top',      label:'Top Headlines', kw:'(world OR politics)' },
   { k:'world',    label:'World',         kw:'(world OR international)' },
   { k:'politics', label:'Politics',      kw:'(election OR government)' },
   { k:'business', label:'Business',      kw:'(economy OR markets)' },
   { k:'tech',     label:'Tech',          kw:'(technology OR software)' },
-  { k:'science',  label:'Science',       kw:'(science OR research)' }
+  { k:'science',  label:'Science',       kw:'(science OR research)' },
+  { k:'sports',   label:'Sports',        kw:'(sport OR football)' },
+  { k:'french',   label:'Français',      kw:'(France OR monde)', lang:'french', dom:FR_DOMCLAUSE }
 ];
 
 const GDELT = 'https://api.gdeltproject.org/api/v2/doc/doc';
@@ -209,6 +232,19 @@ const SNAP = {
     ['Reuters — Science','Reuters','https://www.reuters.com/science/'],
     ['The Guardian — Science','The Guardian','https://www.theguardian.com/science'],
     ['NPR — Science','NPR','https://www.npr.org/sections/science/']
+  ],
+  sports:[
+    ['BBC Sport','BBC Sport','https://www.bbc.com/sport'],
+    ['The Guardian — Sport','The Guardian','https://www.theguardian.com/sport'],
+    ['Reuters — Sports','Reuters','https://www.reuters.com/sports/'],
+    ['Al Jazeera — Sport','Al Jazeera','https://www.aljazeera.com/sports/']
+  ],
+  french:[
+    ['Le Monde — À la une','Le Monde','https://www.lemonde.fr/'],
+    ['Le Figaro — Actualités','Le Figaro','https://www.lefigaro.fr/'],
+    ['France Info — Direct','France Info','https://www.francetvinfo.fr/'],
+    ['Libération','Libération','https://www.liberation.fr/'],
+    ['RFI — Info','RFI','https://www.rfi.fr/fr/']
   ]
 };
 
@@ -256,7 +292,9 @@ function srcName(domain){
   const map = {'reuters.com':'Reuters','apnews.com':'AP News','bbc.co.uk':'BBC','bbc.com':'BBC',
     'theguardian.com':'The Guardian','aljazeera.com':'Al Jazeera','npr.org':'NPR','cnbc.com':'CNBC',
     'dw.com':'DW','france24.com':'France 24','abcnews.go.com':'ABC News','cbsnews.com':'CBS News',
-    'nbcnews.com':'NBC News','euronews.com':'Euronews','time.com':'TIME','axios.com':'Axios'};
+    'nbcnews.com':'NBC News','euronews.com':'Euronews','time.com':'TIME','axios.com':'Axios',
+    'lemonde.fr':'Le Monde','lefigaro.fr':'Le Figaro','francetvinfo.fr':'France Info',
+    'liberation.fr':'Libération','rfi.fr':'RFI','leparisien.fr':'Le Parisien'};
   if(map[domain]) return map[domain];
   return (domain||'').replace(/^www\./,'').split('.')[0].replace(/^\w/,c=>c.toUpperCase());
 }
@@ -267,7 +305,9 @@ function fmtTime(d){
 /* ============================ FETCH =========================== */
 function buildURL(cat, days){
   const c = CATS.find(x => x.k === cat);
-  const q = encodeURIComponent(c.kw + ' ' + DOMCLAUSE + ' sourcelang:english');
+  const dom = c.dom || DOMCLAUSE;            // French tab swaps in French outlets
+  const lang = c.lang || 'english';          // …and French-language results only
+  const q = encodeURIComponent(c.kw + ' ' + dom + ' sourcelang:' + lang);
   return `${GDELT}?query=${q}&mode=artlist&format=json&maxrecords=40&sort=datedesc&timespan=${days||2}d`;
 }
 
