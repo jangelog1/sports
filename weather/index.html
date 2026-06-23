@@ -54,6 +54,10 @@
   a.stayrow .tx{color:var(--accent)}
   .stayclear{margin-left:auto;font-size:10px;color:var(--muted);cursor:pointer;font-weight:600;text-transform:none;letter-spacing:0}
   .stayclear:hover{color:var(--bad)}
+  .staynote{font-size:13.5px;line-height:1.62;color:var(--txt);white-space:normal;word-break:break-word;padding-top:6px}
+  .staynote+.staynote{border-top:1px dashed var(--line);margin-top:8px}
+  a.lk{color:var(--accent);font-weight:700;text-decoration:none}
+  a.lk:active{opacity:.55}
   /* TICKER */
   .ticker{position:sticky;top:0;z-index:60;background:linear-gradient(90deg,#08131f,#0e2138);border-bottom:1px solid var(--line);overflow:hidden;white-space:nowrap;padding-top:env(safe-area-inset-top,0px)}
   .ticker-row{display:flex;align-items:center}
@@ -412,28 +416,42 @@ function saveUnit(){ try{localStorage.setItem("wx_unit",STATE.unit);}catch(e){} 
 var STAY=null;
 function loadStay(){ try{ STAY=JSON.parse(localStorage.getItem("wx_stay")||"null"); }catch(e){ STAY=null; } }
 function saveStay(){ try{ STAY?localStorage.setItem("wx_stay",JSON.stringify(STAY)):localStorage.removeItem("wx_stay"); }catch(e){} }
+// The SWA Shortcut puts the WHOLE calendar Notes field in ?note=… (last param), which may
+// itself contain & or # — so grab everything from "note=" to the end of the URL (search+hash).
+function extractNote(){
+  const full=location.search+location.hash;
+  const ix=full.indexOf("note=");
+  if(ix<0) return "";
+  const raw=full.slice(ix+5);
+  try{ return decodeURIComponent(raw); }
+  catch(e){ try{ return decodeURIComponent(raw.replace(/%(?![0-9a-fA-F]{2})/g,"%25")); }catch(_){ return raw.replace(/\+/g," "); } }
+}
 function parseStay(q){
   const hotel=(q.get("hotel")||"").trim(), addr=(q.get("addr")||q.get("address")||"").trim(),
     phone=(q.get("phone")||q.get("tel")||"").trim(), trans=(q.get("transport")||q.get("trans")||"").trim(),
-    note=(q.get("note")||q.get("stay")||q.get("notes")||"").trim();
+    note=(extractNote()||q.get("stay")||q.get("notes")||"").trim();
   if(hotel||addr||phone||trans||note){ STAY={hotel,addr,phone,trans,note}; saveStay(); }
 }
 function clearStay(){ STAY=null; saveStay(); renderNow(); }
+// turn phone numbers + web links inside the notes into tappable links, keep line breaks
+function linkify(text){
+  let s=esc(text);
+  s=s.replace(/(\+?\d[\d().\-\s]{7,}\d)/g, m=>{ const tel=m.replace(/[^\d+]/g,""); return tel.replace(/\D/g,"").length>=7?`<a class="lk" href="tel:${tel}">${m}</a>`:m; });
+  s=s.replace(/(https?:\/\/[^\s<]+)/g, m=>`<a class="lk" href="${m}" target="_blank" rel="noopener">${m}</a>`);
+  return s.replace(/\r?\n/g,"<br>");
+}
 function stayCardHTML(){
   if(!STAY) return "";
   const {hotel,addr,phone,trans,note}=STAY;
-  let ph=phone;
-  if(!ph && note){ const m=note.match(/(\+?\d[\d\-\s().]{7,}\d)/); if(m) ph=m[1].trim(); }
-  const mapq=encodeURIComponent([hotel,addr].filter(Boolean).join(" "));
   let rows="";
   if(hotel) rows+=`<div class="stayname">🏨 ${esc(hotel)}</div>`;
-  if(addr) rows+=`<a class="stayrow" href="https://maps.apple.com/?q=${mapq}" target="_blank" rel="noopener"><span class="e">📍</span><span class="tx">${esc(addr)}<small>Tap to open in Maps</small></span></a>`;
-  else if(hotel) rows+=`<a class="stayrow" href="https://maps.apple.com/?q=${mapq}" target="_blank" rel="noopener"><span class="e">📍</span><span class="tx">Find on map<small>Tap to open in Maps</small></span></a>`;
-  if(ph){ const tel=ph.replace(/[^\d+]/g,""); rows+=`<a class="stayrow" href="tel:${esc(tel)}"><span class="e">📞</span><span class="tx">${esc(ph)}<small>Tap to call</small></span></a>`; }
+  if(addr){ const mapq=encodeURIComponent([hotel,addr].filter(Boolean).join(" "));
+    rows+=`<a class="stayrow" href="https://maps.apple.com/?q=${mapq}" target="_blank" rel="noopener"><span class="e">📍</span><span class="tx">${esc(addr)}<small>Tap to open in Maps</small></span></a>`; }
+  if(phone){ const tel=phone.replace(/[^\d+]/g,""); rows+=`<a class="stayrow" href="tel:${esc(tel)}"><span class="e">📞</span><span class="tx">${esc(phone)}<small>Tap to call</small></span></a>`; }
   if(trans) rows+=`<div class="stayrow"><span class="e">🚗</span><span class="tx" style="color:var(--txt)">${esc(trans)}</span></div>`;
-  if(note && !hotel && !addr && !ph && !trans) rows+=`<div class="stayrow"><span class="e">📝</span><span class="tx" style="color:var(--txt)">${esc(note)}</span></div>`;
+  if(note) rows+=`<div class="staynote">${linkify(note)}</div>`;   // full calendar notes, phones/links tappable
   if(!rows) return "";
-  return `<div class="card"><h2>🏨 Your stay <span class="stayclear" onclick="clearStay()">clear ✕</span></h2>${rows}</div>`;
+  return `<div class="card"><h2>🏨 Your trip & stay <span class="stayclear" onclick="clearStay()">clear ✕</span></h2>${rows}</div>`;
 }
 
 /* ============ HELPERS ============ */
