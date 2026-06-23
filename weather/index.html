@@ -15,14 +15,14 @@
 <link rel="manifest" href="manifest.webmanifest">
 <style>
   :root{
-    --bg:#0b1b2e; --bg2:#08131f; --panel:rgba(255,255,255,.06); --panel2:rgba(255,255,255,.10); --line:rgba(255,255,255,.14);
-    --txt:#ffffff; --muted:#aec6e2; --accent:#5fb2ff; --accent2:#ffd25a; --sky:#5fb2ff;
+    --bg:#0b1b2e; --bg2:#08131f; --panel:rgba(9,17,30,.66); --panel2:rgba(9,17,30,.78); --line:rgba(255,255,255,.17);
+    --txt:#ffffff; --muted:#c4d6ec; --accent:#7cc0ff; --accent2:#ffd25a; --sky:#5fb2ff;
     --warn:#ff8a66; --good:#34d399; --bad:#ff5c7c;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:linear-gradient(180deg,#2b6aa6 0%,#16406b 32%,var(--bg) 70%);color:var(--txt);
     font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-height:100vh;padding:0 0 60px;
-    position:relative;overflow-x:hidden;transition:background .8s}
+    position:relative;overflow-x:hidden;transition:background .8s;text-shadow:0 1px 2px rgba(0,0,0,.45)}
   body.night{background:linear-gradient(180deg,#101f3a 0%,#0a1428 40%,#05080f 80%)}
   /* ===== ANIMATED CLOUD SKY ===== */
   .sky{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
@@ -131,7 +131,7 @@
   /* NOW hero */
   .hero{text-align:center;padding:6px 0 2px}
   .hero .ic{font-size:74px;line-height:1;filter:drop-shadow(0 6px 14px rgba(0,0,0,.4))}
-  .hero .temp{font-size:64px;font-weight:200;letter-spacing:-2px;margin:2px 0}
+  .hero .temp{font-size:64px;font-weight:300;letter-spacing:-2px;margin:2px 0}
   .hero .temp sup{font-size:26px;font-weight:400;top:-1.1em}
   .hero .desc{font-size:17px;font-weight:700}
   .hero .feels{color:var(--muted);font-size:13.5px;margin-top:3px}
