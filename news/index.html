@@ -488,6 +488,21 @@ document.getElementById('refreshBtn').onclick = function(){
 build();
 fetchCat('top');
 
+// Open story links from an INSTALLED app. iOS home-screen PWAs (and other standalone installs)
+// silently ignore <a target="_blank"> — taps do nothing — so when running standalone we
+// intercept and open the article ourselves (window.open works inside the click gesture). In a
+// normal browser tab the native target="_blank" already works, so we leave it untouched there.
+const STANDALONE = (navigator.standalone === true) ||
+  (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+if(STANDALONE){
+  document.addEventListener('click', function(e){
+    const a = e.target.closest('a[href^="http"]');
+    if(!a) return;
+    e.preventDefault();
+    window.open(a.href, '_blank');
+  });
+}
+
 // Register service worker (PWA / offline).
 if('serviceWorker' in navigator){
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));

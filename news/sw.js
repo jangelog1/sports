@@ -1,5 +1,5 @@
 // World News service worker — network-first so updates reach installed apps.
-const CACHE = 'news-v10';
+const CACHE = 'news-v11';
 const ASSETS = ['./', 'index.html', 'icon-512.png', 'manifest.webmanifest'];
 
 self.addEventListener('install', e => {
