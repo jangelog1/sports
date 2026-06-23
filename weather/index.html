@@ -15,14 +15,23 @@
 <link rel="manifest" href="manifest.webmanifest">
 <style>
   :root{
-    --bg:#0b1b2e; --bg2:#08131f; --panel:#10243a; --panel2:#16304b; --line:#26456b;
-    --txt:#ffffff; --muted:#9db6d4; --accent:#4ea8ff; --accent2:#ffd25a; --sky:#4ea8ff;
-    --warn:#ff7a59; --good:#34d399; --bad:#ff5c7c;
+    --bg:#0b1b2e; --bg2:#08131f; --panel:rgba(255,255,255,.06); --panel2:rgba(255,255,255,.10); --line:rgba(255,255,255,.14);
+    --txt:#ffffff; --muted:#aec6e2; --accent:#5fb2ff; --accent2:#ffd25a; --sky:#5fb2ff;
+    --warn:#ff8a66; --good:#34d399; --bad:#ff5c7c;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:linear-gradient(180deg,#123150 0%,var(--bg) 42%);color:var(--txt);
-    font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-height:100vh;padding:0 0 60px;transition:background .6s}
-  body.night{background:linear-gradient(180deg,#0a1730 0%,#060d18 45%)}
+  body{background:linear-gradient(180deg,#2b6aa6 0%,#16406b 32%,var(--bg) 70%);color:var(--txt);
+    font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-height:100vh;padding:0 0 60px;
+    position:relative;overflow-x:hidden;transition:background .8s}
+  body.night{background:linear-gradient(180deg,#101f3a 0%,#0a1428 40%,#05080f 80%)}
+  /* ===== ANIMATED CLOUD SKY ===== */
+  .sky{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+  .sky::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,22,40,.06) 0%,rgba(7,14,26,.42) 70%,rgba(5,9,18,.6) 100%)}
+  .cloud{position:absolute;left:0;will-change:transform;animation:drift linear infinite;filter:blur(7px);opacity:.16}
+  .cloud svg{display:block;width:100%;height:auto}
+  @keyframes drift{from{transform:translateX(-45vw)}to{transform:translateX(150vw)}}
+  body.night .cloud{opacity:.085;filter:blur(7px) brightness(.65)}
+  @media (prefers-reduced-motion:reduce){.cloud{animation:none}}
   /* TICKER */
   .ticker{position:sticky;top:0;z-index:60;background:linear-gradient(90deg,#08131f,#0e2138);border-bottom:1px solid var(--line);overflow:hidden;white-space:nowrap;padding-top:env(safe-area-inset-top,0px)}
   .ticker-row{display:flex;align-items:center}
@@ -64,9 +73,35 @@
   @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
   .note{color:var(--muted);font-size:12.5px;margin:14px 0;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);padding:10px 14px;border-radius:8px}
   .note b{color:var(--txt)}
-  /* CARDS */
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin:12px 0}
+  /* CARDS (glassmorphism over the moving clouds) */
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0;
+    backdrop-filter:blur(16px) saturate(1.3);-webkit-backdrop-filter:blur(16px) saturate(1.3);
+    box-shadow:0 10px 30px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.07)}
+  .note,.drow,.crow,.hr,.rline{backdrop-filter:blur(12px) saturate(1.2);-webkit-backdrop-filter:blur(12px) saturate(1.2)}
   .card h2{font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--accent2);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  /* WHAT TO WEAR */
+  .advhead{font-size:19px;font-weight:800;margin:-2px 0 8px;letter-spacing:-.3px}
+  .adv{display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .adv:last-child{border-bottom:0}
+  .adv .e{font-size:23px;width:28px;text-align:center;flex:0 0 auto}
+  .adv .t{font-size:14px;font-weight:600}
+  /* TRIP */
+  .tripadd{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 6px}
+  .tripadd input{background:var(--panel);border:1px solid var(--line);color:var(--txt);padding:11px 13px;border-radius:11px;font-size:15px}
+  .tripadd input[type=text]{flex:1;min-width:150px}
+  .tripadd input[type=date]{flex:0 0 auto;color-scheme:dark}
+  .tripadd input:focus{outline:none;border-color:var(--accent)}
+  .thead{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+  .thead .dest{font-size:18px;font-weight:800}
+  .thead .when{color:var(--accent2);font-size:12.5px;font-weight:700}
+  .tcond{display:flex;align-items:center;gap:12px;margin:8px 0 4px}
+  .tcond .ti{font-size:42px;line-height:1}
+  .tcond .tt{font-size:26px;font-weight:800}
+  .tcond .tt .lo{color:var(--muted);font-weight:600;font-size:18px}
+  .tcond .tx{color:var(--muted);font-size:13px}
+  .tmeta{color:var(--muted);font-size:12px;margin-top:2px}
+  .trm{color:var(--muted);cursor:pointer;font-size:16px}
+  .trm:hover{color:var(--bad)}
   /* NOW hero */
   .hero{text-align:center;padding:6px 0 2px}
   .hero .ic{font-size:74px;line-height:1;filter:drop-shadow(0 6px 14px rgba(0,0,0,.4))}
@@ -138,6 +173,9 @@
 </head>
 <body>
 
+<!-- drifting cloud sky (decorative, behind everything) -->
+<div class="sky" id="sky" aria-hidden="true"></div>
+
 <div class="ticker">
   <div class="ticker-row">
     <span class="ticker-lbl">🌤️ Weather</span>
@@ -160,6 +198,7 @@
     <button class="on" data-t="now">📍 Now</button>
     <button data-t="hourly">⏱️ Hourly</button>
     <button data-t="daily">📅 7-Day</button>
+    <button data-t="trip">✈️ Trip</button>
     <button data-t="air">🌫️ Air</button>
     <button data-t="cities">🏙️ Cities</button>
   </nav>
@@ -176,6 +215,16 @@
   <section id="daily">
     <div class="note">📅 <b>7-day forecast</b> — daily high/low, conditions and precipitation chance. Live from Open-Meteo.</div>
     <div id="dailyEl"></div>
+  </section>
+
+  <section id="trip">
+    <div class="note">✈️ <b>Trip planner</b> — add where you're flying and the date; you'll get that day's forecast plus <b>what to wear &amp; whether to pack an umbrella</b>. Forecasts are available up to ~16 days out. A Shortcut can fill this in automatically from your flight calendar (see the in-app tip).</div>
+    <div class="tripadd">
+      <input id="tripCity" type="text" placeholder="Destination city…" autocomplete="off">
+      <input id="tripDate" type="date">
+    </div>
+    <div class="results" id="tripResults"></div>
+    <div id="tripEl"></div>
   </section>
 
   <section id="air">
@@ -220,6 +269,46 @@ function wx(code,day){ day=day==null?1:day;
     95:["⛈️","Thunderstorm"],96:["⛈️","Thunderstorm + hail"],99:["⛈️","Severe thunderstorm"]
   };
   return m[code]||["🌡️","—"];
+}
+
+/* ============ CLOUD SKY (decorative) ============ */
+function buildClouds(){
+  const svg='<svg viewBox="0 0 220 110"><g fill="#fff"><circle cx="55" cy="66" r="34"/><circle cx="98" cy="48" r="44"/><circle cx="145" cy="64" r="34"/><circle cx="104" cy="80" r="40"/><rect x="52" y="64" width="100" height="40" rx="20"/></g></svg>';
+  // [topVH, widthPX, opacity, durationS, delayS, blurPX]
+  const set=[[6,300,.18,90,-8,8],[20,200,.13,70,-35,6],[40,360,.20,120,-60,9],[12,150,.10,60,-20,5],[58,260,.16,100,-12,7],[72,190,.12,80,-48,6]];
+  $("#sky").innerHTML=set.map(c=>`<div class="cloud" style="top:${c[0]}vh;width:${c[1]}px;opacity:${c[2]};animation-duration:${c[3]}s;animation-delay:${c[4]}s;filter:blur(${c[5]}px)">${svg}</div>`).join("");
+}
+
+/* ============ WHAT TO WEAR ADVISOR ============ */
+// o = {tmax,tmin,tcur,pop,wind,uv,code,isDay} in the user's current units
+function advise(o){
+  const F=isF(); const toF=v=>v==null?null:(F?v:(v*9/5+32));
+  const hiF=toF(o.tmax), loF=toF(o.tmin), curF=toF(o.tcur);
+  const items=[]; let head="";
+  const rainy=[51,53,55,56,57,61,63,65,66,67,80,81,82,95,96,99].includes(o.code);
+  const snowy=[71,73,75,77,85,86].includes(o.code);
+  if(o.pop>=40 || rainy) items.push(["☔","Bring an umbrella"+(o.pop!=null?` — ${o.pop}% chance of rain`:"")]);
+  if(snowy) items.push(["🧤","Snow expected — boots, gloves &amp; a hat"]);
+  const t=hiF!=null?hiF:curF;
+  if(t==null){ head="—"; }
+  else if(t<33){ head="Frigid — bundle up"; items.push(["🧥","Heavy winter coat, hat &amp; gloves"]); }
+  else if(t<46){ head="Cold"; items.push(["🧥","A warm coat and layers"]); }
+  else if(t<59){ head="Cool"; items.push(["🧥","A jacket or hoodie"]); }
+  else if(t<71){ head="Mild"; items.push(["👕","Long sleeves or a light layer"]); }
+  else if(t<83){ head="Warm"; items.push(["👕","T‑shirt weather"]); }
+  else { head="Hot"; items.push(["🩳","Light, breathable clothes"]); items.push(["💧","Drink plenty of water"]); }
+  if(hiF!=null&&loF!=null){ if(hiF-loF>=25) items.push(["🔄","Big day‑night swing — dress in layers"]);
+    else if(loF<33&&hiF>=46) items.push(["❄️","Below freezing overnight"]); }
+  const windMph=o.wind==null?null:(F?o.wind:o.wind/1.609);
+  if(windMph!=null&&windMph>=22) items.push(["💨","Breezy — a windbreaker helps"]);
+  if(o.uv!=null&&o.uv>=6&&o.isDay!==0) items.push(["🧴","High UV — sunscreen &amp; sunglasses"]);
+  if(!items.length) items.push(["👍","Comfortable — wear whatever you like"]);
+  return {head, items};
+}
+function adviceCardHTML(title, adv){
+  return `<div class="card"><h2>🧥 ${esc(title)}</h2>
+    <div class="advhead">${adv.head}</div>
+    ${adv.items.map(a=>`<div class="adv"><span class="e">${a[0]}</span><span class="t">${a[1]}</span></div>`).join("")}</div>`;
 }
 
 /* ============ STATE ============ */
@@ -302,6 +391,13 @@ function renderNow(){
       <div><div class="k">🌇 Sunset</div><div class="v">${d.sunset?hhmm(d.sunset[0]):"—"}</div></div>
     </div>
   </div></div>`;
+  // what to wear today (only with live data)
+  if(STATE.wx){
+    const adv=advise({tmax:d.temperature_2m_max[0], tmin:d.temperature_2m_min[0], tcur:cur.apparent_temperature,
+      pop:d.precipitation_probability_max[0], wind:cur.wind_speed_10m, uv:d.uv_index_max&&d.uv_index_max[0],
+      code:cur.weather_code, isDay:cur.is_day});
+    h+=adviceCardHTML("What to wear · today", adv);
+  }
   // mini hourly preview
   if(STATE.wx){ h+=renderHourlyStrip(8, "Next hours"); }
   $("#nowEl").innerHTML=h;
@@ -501,6 +597,96 @@ function renderTicker(){
   $("#tickerTrack").innerHTML=one+one;
 }
 
+/* ============ TRIP PLANNER (what to wear where you're flying) ============ */
+var TRIPS=[]; var TRIP_WX={};
+function loadTrips(){ try{ TRIPS=JSON.parse(localStorage.getItem("wx_trips")||"[]")||[]; }catch(e){ TRIPS=[]; } }
+function saveTrips(){ try{ localStorage.setItem("wx_trips",JSON.stringify(TRIPS)); }catch(e){} }
+function tripKey(t){ return t.lat.toFixed(2)+","+t.lon.toFixed(2)+"|"+t.date; }
+function todayISO(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function plusDaysISO(n){ const d=new Date(); d.setDate(d.getDate()+n); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function fmtTripDate(iso){ const d=new Date(iso+"T12:00:00"); return d.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}); }
+function daysOut(iso){ const a=new Date(todayISO()+"T12:00:00"), b=new Date(iso+"T12:00:00"); return Math.round((b-a)/86400000); }
+
+function addTrip(place, date){
+  date=date||plusDaysISO(1);
+  const t={name:place.name, admin:place.admin||"", country:place.country||"", lat:place.lat, lon:place.lon, tz:place.tz||"auto", date};
+  if(!TRIPS.some(x=>tripKey(x)===tripKey(t))) TRIPS.push(t);
+  TRIPS.sort((a,b)=>a.date<b.date?-1:1);
+  saveTrips(); renderTrips();
+}
+function removeTrip(k){ TRIPS=TRIPS.filter(t=>tripKey(t)!==k); saveTrips(); renderTrips(); }
+async function addTripByName(name, date){
+  try{ const d=await fetchJSON(`${OM_GEO}?name=${encodeURIComponent(name)}&count=1&language=en&format=json`);
+    const r=d.results&&d.results[0]; if(!r) return false;
+    addTrip({name:r.name, admin:r.admin1||"", country:r.country_code||r.country||"", lat:r.latitude, lon:r.longitude, tz:r.timezone||"auto"}, date);
+    return true;
+  }catch(e){ return false; }
+}
+async function tripForecast(t){
+  const u=`${OM}?latitude=${t.lat}&longitude=${t.lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,uv_index_max`
+    +`&start_date=${t.date}&end_date=${t.date}&temperature_unit=${uTemp()}&wind_speed_unit=${uWind()}&timezone=auto`;
+  const d=await fetchJSON(u); return d.daily;
+}
+const SHORTCUT_TIP='<div class="card"><h2>⚡ Auto-fill with the Shortcuts app</h2>'
+  +'<div class="adv"><span class="e">📍</span><span class="t"><b>When you land:</b> Shortcuts → Automation → <b>Airplane Mode · Turned Off</b> → <b>Open URL</b> <span style="font-family:ui-monospace,monospace;color:var(--accent)">…/weather/?geo=1</span> — pops your current-location weather automatically.</span></div>'
+  +'<div class="adv"><span class="e">✈️</span><span class="t"><b>From your flight calendar:</b> a Shortcut that finds your next flight event and opens <span style="font-family:ui-monospace,monospace;color:var(--accent)">…/weather/?trip=CITY&amp;date=YYYY-MM-DD</span> drops the destination straight into this tab.</span></div></div>';
+function renderTrips(){
+  const el=$("#tripEl");
+  if(!TRIPS.length){ el.innerHTML='<div class="note" style="border-left-color:var(--accent2)">No trips yet — search a destination above and pick a date. ✈️</div>'+SHORTCUT_TIP; return; }
+  el.innerHTML=TRIPS.map(t=>{
+    const k=tripKey(t), out=daysOut(t.date);
+    const place=esc(t.name)+(t.admin?`, ${esc(t.admin)}`:"")+(t.country?` ${esc(t.country)}`:"");
+    return `<div class="card" id="t_${esc(k).replace(/[^a-z0-9]/gi,"")}">
+      <div class="thead"><div class="dest">✈️ ${esc(t.name)}</div>
+        <div><span class="when">${esc(fmtTripDate(t.date))}${out>=0?` · ${out===0?"today":out===1?"tomorrow":"in "+out+"d"}`:""}</span>
+        <span class="trm" data-trm="${esc(k)}" title="Remove">✕</span></div></div>
+      <div class="tmeta">${place}</div>
+      <div id="tw_${esc(k).replace(/[^a-z0-9]/gi,"")}"><div class="tmeta" style="margin-top:10px">Loading forecast…</div></div>
+    </div>`;
+  }).join("");
+  el.innerHTML+=SHORTCUT_TIP;
+  document.querySelectorAll("#tripEl [data-trm]").forEach(b=>b.onclick=()=>removeTrip(b.dataset.trm));
+  TRIPS.forEach(fillTrip);
+}
+async function fillTrip(t){
+  const id="tw_"+tripKey(t).replace(/[^a-z0-9]/gi,""); const box=document.getElementById(id); if(!box) return;
+  if(daysOut(t.date)<0){ box.innerHTML='<div class="tmeta" style="margin-top:10px">That date has passed — remove it or add a new trip.</div>'; return; }
+  try{
+    const dly=await tripForecast(t);
+    const code=dly.weather_code[0], [ic,label]=wx(code,1);
+    const adv=advise({tmax:dly.temperature_2m_max[0], tmin:dly.temperature_2m_min[0], tcur:dly.temperature_2m_max[0],
+      pop:dly.precipitation_probability_max[0], wind:dly.wind_speed_10m_max&&dly.wind_speed_10m_max[0],
+      uv:dly.uv_index_max&&dly.uv_index_max[0], code, isDay:1});
+    box.innerHTML=`<div class="tcond"><span class="ti">${ic}</span>
+      <span class="tt">${Tn(dly.temperature_2m_max[0])}° <span class="lo">/ ${Tn(dly.temperature_2m_min[0])}°</span></span>
+      <span class="tx">${esc(label)}${dly.precipitation_probability_max[0]?` · 💧 ${dly.precipitation_probability_max[0]}%`:""}</span></div>
+      <div class="advhead" style="font-size:16px;margin:8px 0 6px">${adv.head}</div>
+      ${adv.items.map(a=>`<div class="adv"><span class="e">${a[0]}</span><span class="t">${a[1]}</span></div>`).join("")}`;
+  }catch(e){
+    box.innerHTML='<div class="tmeta" style="margin-top:10px">⏳ Forecast isn’t available yet (more than ~16 days out). Check back closer to your trip.</div>';
+  }
+}
+// trip city search
+var tripSearchT=null;
+function onTripSearch(){
+  const q=$("#tripCity").value.trim(); clearTimeout(tripSearchT);
+  if(q.length<2){ $("#tripResults").innerHTML=""; return; }
+  tripSearchT=setTimeout(async()=>{
+    try{ const d=await fetchJSON(`${OM_GEO}?name=${encodeURIComponent(q)}&count=6&language=en&format=json`);
+      const rs=d.results||[];
+      if(!rs.length){ $("#tripResults").innerHTML='<div class="note">No matches.</div>'; return; }
+      $("#tripResults").innerHTML=rs.map((r,i)=>`<div class="rline" data-i="${i}">
+        <div><div class="nm">${esc(r.name)}</div><div class="sm">${esc([r.admin1,r.country].filter(Boolean).join(", "))}</div></div>
+        <div class="add">＋</div></div>`).join("");
+      document.querySelectorAll("#tripResults .rline").forEach(el=>el.onclick=()=>{
+        const r=rs[+el.dataset.i]; const date=$("#tripDate").value||plusDaysISO(1);
+        addTrip({name:r.name, admin:r.admin1||"", country:r.country_code||r.country||"", lat:r.latitude, lon:r.longitude, tz:r.timezone||"auto"}, date);
+        $("#tripCity").value=""; $("#tripResults").innerHTML="";
+      });
+    }catch(e){ $("#tripResults").innerHTML='<div class="note">Search unavailable — try again.</div>'; }
+  },280);
+}
+
 /* ============ nav ============ */
 function show(t){
   document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("on",x.dataset.t===t));
@@ -508,24 +694,44 @@ function show(t){
   window.scrollTo(0,0);
 }
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>show(b.dataset.t));
-$("#refreshBtn").onclick=()=>{ refresh(); loadCityTemps(); };
+$("#refreshBtn").onclick=()=>{ refresh(); loadCityTemps(); if(TRIPS.length) renderTrips(); };
 $("#geoBtn").onclick=useMyLocation;
 $("#cityInput").oninput=onSearch;
+$("#tripCity").oninput=onTripSearch;
 $("#uF").onclick=()=>setUnit("F");
 $("#uC").onclick=()=>setUnit("C");
 function setUnit(u){ if(STATE.unit===u) return; STATE.unit=u; saveUnit();
   $("#uF").classList.toggle("on",u==="F"); $("#uC").classList.toggle("on",u==="C");
-  CITY_WX={}; refresh(); loadCityTemps(); }
+  CITY_WX={}; refresh(); loadCityTemps(); if(TRIPS.length) renderTrips(); }
+
+/* deep links so the Shortcuts app can drive the dashboard */
+async function selectCityByName(name){
+  try{ const d=await fetchJSON(`${OM_GEO}?name=${encodeURIComponent(name)}&count=1&language=en&format=json`);
+    const r=d.results&&d.results[0]; if(!r) return;
+    const c={name:r.name, admin:r.admin1||"", country:r.country_code||r.country||"", lat:r.latitude, lon:r.longitude, tz:r.timezone||"auto"};
+    if(!STATE.cities.some(x=>key(x)===key(c))){ STATE.cities.push(c); saveCities(); }
+    selectCity(c); loadCityTemps();
+  }catch(e){}
+}
+function handleDeepLink(){
+  const q=new URLSearchParams(location.search); let acted=false;
+  if(q.get("trip")){ acted=true; addTripByName(q.get("trip"), q.get("date")||plusDaysISO(1)).then(ok=>{ if(ok) show("trip"); }); }
+  else if(q.get("city")){ acted=true; selectCityByName(q.get("city")); }
+  const g=q.get("geo"); if(g==="1"||g===""&&q.has("geo")){ acted=true; useMyLocation(); }
+  return acted;
+}
 
 /* ============ INIT ============ */
-load();
+load(); loadTrips(); buildClouds();
 $("#uF").classList.toggle("on",STATE.unit==="F"); $("#uC").classList.toggle("on",STATE.unit==="C");
+$("#tripDate").min=todayISO(); $("#tripDate").max=plusDaysISO(16); $("#tripDate").value=plusDaysISO(1);
 renderHeader(); renderNow();            // baked sample first paint
-renderCities();
+renderCities(); renderTrips();
 refresh();                              // live for the active city
 loadCityTemps();                        // live temps for the list + ticker
-// auto-try geolocation on first load (graceful if denied)
-if(!STATE.active || !STATE.active.geo) useMyLocation();
+// deep link (Shortcuts) takes priority; otherwise auto-try geolocation
+const deepLinked=handleDeepLink();
+if(!deepLinked && (!STATE.active || !STATE.active.geo)) useMyLocation();
 setInterval(()=>{ refresh(); loadCityTemps(); }, 600000); // every 10 min
 
 // PWA service worker
