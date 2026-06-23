@@ -111,6 +111,12 @@ const TRIPS=[
     place:"Rare Beachfront Getaway · Pool, Gym + Balcony", host:"Kat",
     where:"Condado del Mar, Avenida Ashford, San Juan, PR", guests:2,
     maps:"https://maps.apple.com/?q=Condado%20del%20Mar%20Avenida%20Ashford%20San%20Juan" },
+  { city:"Darrien → Tokyo", region:"Study abroad · Japan", flag:"🎌", emojiBg:"linear-gradient(135deg,#e0556633,#24304a44)",
+    inISO:"2026-07-30T08:40:00", outISO:"2026-10-28T13:45:00", kind:"flights", who:"Darrien",
+    place:"Lions Mansion Nishi-Shinjuku #814", sub:"~3-month study trip · GenkiJACS · arrives Jul 31",
+    where:"Nishi-Shinjuku, Tokyo", guests:1,
+    inLabel:"Departs", outLabel:"Returns",
+    maps:"https://maps.apple.com/?q=Nishi-Shinjuku%20Tokyo" },
 ];
 
 const $=s=>document.querySelector(s);
@@ -141,16 +147,16 @@ function render(){
   // HERO
   const p=parts(diff(next.inISO)); const live=Date.now()>=new Date(next.inISO).getTime();
   $("#heroEl").innerHTML=`<div class="hero" style="background:${next.emojiBg},var(--panel2)">
-    <div class="lbl">${live?"✈️ You're on this trip":"Next trip"}</div>
+    <div class="lbl">${live?(next.kind==="flights"?("🎌 "+esc(next.who||"Trip")+" — in progress"):"✈️ You're on this trip"):"Next trip"}</div>
     <div class="city">${next.flag} ${esc(next.city)}</div>
-    ${live? `<div class="big"><b>Enjoy ${esc(next.city)}!</b></div>`
+    ${live? `<div class="big"><b>${next.kind==="flights"?(esc(next.who||"")+" is in Tokyo!"):("Enjoy "+esc(next.city)+"!")}</b></div>`
           : `<div class="units">
               <div><div class="n">${p.d}</div><div class="u">days</div></div>
               <div><div class="n">${String(p.h).padStart(2,"0")}</div><div class="u">hrs</div></div>
               <div><div class="n">${String(p.m).padStart(2,"0")}</div><div class="u">min</div></div>
               <div><div class="n">${String(p.s).padStart(2,"0")}</div><div class="u">sec</div></div>
             </div>`}
-    <div class="when">${esc(fmtRange(next.inISO,next.outISO))} · check‑in ${fmtDay(next.inISO)} ${fmtT(next.inISO)}</div>
+    <div class="when">${esc(fmtRange(next.inISO,next.outISO))} · ${(next.inLabel||"check-in").toLowerCase()} ${fmtDay(next.inISO)} ${fmtT(next.inISO)}</div>
   </div>`;
   // CARDS
   $("#cardsEl").innerHTML=list.map(t=>{
@@ -166,9 +172,11 @@ function render(){
       </div>
       <div class="bar"><i style="width:${done.toFixed(0)}%"></i></div>
       <div class="rows">
-        <div class="row"><span class="e">🏠</span><span class="tx"><b>${esc(t.place)}</b><small>Hosted by ${esc(t.host)} · ${t.guests} guest${t.guests>1?"s":""}</small></span></div>
+        <div class="row"><span class="e">🏠</span><span class="tx"><b>${esc(t.place)}</b><small>${t.sub?esc(t.sub):("Hosted by "+esc(t.host)+" · "+t.guests+" guest"+(t.guests>1?"s":""))}</small></span></div>
         <a class="row" href="${t.maps}" target="_blank" rel="noopener"><span class="e">📍</span><span class="tx"><b>${esc(t.where)}</b><small>Tap to open in Maps</small></span></a>
-        <div class="row"><span class="e">🛎️</span><span class="tx">Check‑in <b>${fmtDay(t.inISO)}</b> after ${fmtT(t.inISO)}<small>Check‑out ${fmtDay(t.outISO)} before ${fmtT(t.outISO)}</small></span></div>
+        ${t.kind==="flights"
+          ? `<div class="row"><span class="e">✈️</span><span class="tx">${esc(t.inLabel||"Departs")} <b>${fmtDay(t.inISO)}</b> · ${fmtT(t.inISO)}<small>${esc(t.outLabel||"Returns")} ${fmtDay(t.outISO)} · ${fmtT(t.outISO)}</small></span></div>`
+          : `<div class="row"><span class="e">🛎️</span><span class="tx">Check‑in <b>${fmtDay(t.inISO)}</b> after ${fmtT(t.inISO)}<small>Check‑out ${fmtDay(t.outISO)} before ${fmtT(t.outISO)}</small></span></div>`}
       </div>
     </div>`;
   }).join("");
