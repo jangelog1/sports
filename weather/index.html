@@ -32,6 +32,28 @@
   @keyframes drift{from{transform:translateX(-45vw)}to{transform:translateX(150vw)}}
   body.night .cloud{opacity:.085;filter:blur(7px) brightness(.65)}
   @media (prefers-reduced-motion:reduce){.cloud{animation:none}}
+  /* ===== LIVE WEATHER FX (rain / snow / sun / moon / lightning) ===== */
+  #fx{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+  .drop{position:absolute;top:-14vh;width:1.6px;background:linear-gradient(180deg,rgba(190,220,245,0),rgba(190,220,245,.6));border-radius:2px;animation:fall linear infinite;will-change:transform}
+  @keyframes fall{to{transform:translateY(128vh)}}
+  .flake{position:absolute;top:-8vh;color:#fff;text-shadow:0 0 4px rgba(255,255,255,.4);animation:snowfall linear infinite;will-change:transform}
+  @keyframes snowfall{to{transform:translateY(122vh) translateX(var(--x,4vw)) rotate(200deg)}}
+  .glow{position:absolute;border-radius:50%;pointer-events:none}
+  #flash{position:fixed;inset:0;z-index:-1;background:#eaf2ff;opacity:0;pointer-events:none}
+  #flash.on{animation:lightning 8s linear infinite}
+  @keyframes lightning{0%,92%,100%{opacity:0}93%{opacity:.5}95%{opacity:.1}96%{opacity:.45}98%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.drop,.flake{animation:none;display:none}#flash.on{animation:none}}
+  /* ===== "YOUR STAY" CARD (hotel / address / phone from the Shortcut) ===== */
+  .stayname{font-size:20px;font-weight:800;margin:-2px 0 6px;letter-spacing:-.3px;display:flex;align-items:center;gap:9px}
+  .stayrow{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px dashed var(--line);color:var(--txt);text-decoration:none}
+  .stayrow:last-child{border-bottom:0}
+  .stayrow .e{font-size:22px;width:26px;text-align:center;flex:0 0 auto}
+  .stayrow .tx{flex:1;min-width:0;font-size:14.5px;font-weight:600}
+  .stayrow .tx small{display:block;color:var(--muted);font-size:11.5px;font-weight:500;margin-top:1px}
+  a.stayrow:active{opacity:.55}
+  a.stayrow .tx{color:var(--accent)}
+  .stayclear{margin-left:auto;font-size:10px;color:var(--muted);cursor:pointer;font-weight:600;text-transform:none;letter-spacing:0}
+  .stayclear:hover{color:var(--bad)}
   /* TICKER */
   .ticker{position:sticky;top:0;z-index:60;background:linear-gradient(90deg,#08131f,#0e2138);border-bottom:1px solid var(--line);overflow:hidden;white-space:nowrap;padding-top:env(safe-area-inset-top,0px)}
   .ticker-row{display:flex;align-items:center}
@@ -175,6 +197,9 @@
 
 <!-- drifting cloud sky (decorative, behind everything) -->
 <div class="sky" id="sky" aria-hidden="true"></div>
+<!-- live weather FX (rain/snow/sun/moon) + lightning flash, reflects current conditions -->
+<div id="fx" aria-hidden="true"></div>
+<div id="flash" aria-hidden="true"></div>
 
 <div class="ticker">
   <div class="ticker-row">
@@ -279,6 +304,60 @@ function buildClouds(){
   $("#sky").innerHTML=set.map(c=>`<div class="cloud" style="top:${c[0]}vh;width:${c[1]}px;opacity:${c[2]};animation-duration:${c[3]}s;animation-delay:${c[4]}s;filter:blur(${c[5]}px)">${svg}</div>`).join("");
 }
 
+/* ============ LIVE WEATHER BACKGROUND (reflects current conditions) ============ */
+function weatherCat(code){
+  if(code===0||code===1) return "clear";
+  if(code===2) return "partly";
+  if(code===3) return "clouds";
+  if(code===45||code===48) return "fog";
+  if([71,73,75,77,85,86].indexOf(code)>=0) return "snow";
+  if([95,96,99].indexOf(code)>=0) return "thunder";
+  if([51,53,55,56,57,61,63,65,66,67,80,81,82].indexOf(code)>=0) return "rain";
+  return "clouds";
+}
+// gradient palettes [top, mid, bottom] per category, day vs night
+const WX_BG={
+  clear:{day:["#4aa6ea","#2b6aa6","#15406b"], night:["#0f1f3c","#0a1428","#05080f"]},
+  partly:{day:["#5b8bb4","#37597e","#172c44"], night:["#16243c","#0e1a2e","#070d18"]},
+  clouds:{day:["#6f8093","#475a6e","#1d2c3d"], night:["#2a3340","#1a222e","#0a0e15"]},
+  fog:{day:["#828c98","#5b6570","#2a3037"], night:["#3a4048","#262b31","#11151a"]},
+  rain:{day:["#46586b","#2c3a49","#111b26"], night:["#212d3a","#161e29","#080d14"]},
+  snow:{day:["#90a1b5","#62738b","#2c3b50"], night:["#3a4453","#252e3b","#0d131c"]},
+  thunder:{day:["#3c3654","#241f33","#0c0a16"], night:["#272338","#171426","#08060f"]}
+};
+var CUR_CAT=null;
+function applyWeatherTheme(code,isDay){
+  const cat=weatherCat(code), day=(isDay!==0&&isDay!==false);
+  const pal=(WX_BG[cat]||WX_BG.clouds)[day?"day":"night"];
+  document.body.style.background=`linear-gradient(180deg,${pal[0]} 0%,${pal[1]} 38%,${pal[2]} 78%)`;
+  document.body.classList.toggle("night",!day);
+  buildFX(cat,day);
+  CUR_CAT=cat+(day?"_d":"_n");
+}
+function rnd(a,b){ return a+Math.random()*(b-a); }
+function buildFX(cat,day){
+  const fx=$("#fx"); if(!fx) return;
+  let html="";
+  if(cat==="clear"||cat==="partly"){
+    if(day) html+=`<div class="glow" style="top:-70px;right:-30px;width:260px;height:260px;background:radial-gradient(circle,rgba(255,233,168,.65),rgba(255,210,90,0) 68%);filter:blur(18px)"></div>`;
+    else { html+=`<div class="glow" style="top:34px;right:30px;width:78px;height:78px;background:radial-gradient(circle,rgba(224,232,255,.85),rgba(224,232,255,0) 70%);filter:blur(6px)"></div>`;
+      for(let i=0;i<26;i++) html+=`<div class="glow" style="top:${rnd(2,46).toFixed(1)}vh;left:${rnd(3,97).toFixed(1)}vw;width:2px;height:2px;background:#fff;opacity:${rnd(.3,.9).toFixed(2)};filter:blur(.3px)"></div>`;
+    }
+  }
+  if(cat==="rain"||cat==="thunder"){
+    const n=cat==="thunder"?64:52;
+    for(let i=0;i<n;i++){ const l=rnd(0,100).toFixed(1), d=rnd(.45,.95).toFixed(2), de=rnd(-2,0).toFixed(2), o=rnd(.22,.6).toFixed(2), h=rnd(9,17).toFixed(0);
+      html+=`<div class="drop" style="left:${l}vw;height:${h}vh;animation-duration:${d}s;animation-delay:${de}s;opacity:${o}"></div>`; }
+  }
+  if(cat==="snow"){
+    const ch=["❄","❅","•","✦"];
+    for(let i=0;i<46;i++){ const l=rnd(0,100).toFixed(1), d=rnd(5,12).toFixed(1), de=rnd(-9,0).toFixed(1), s=rnd(8,22).toFixed(0), o=rnd(.5,1).toFixed(2), x=rnd(-6,6).toFixed(0);
+      html+=`<div class="flake" style="left:${l}vw;font-size:${s}px;animation-duration:${d}s;animation-delay:${de}s;opacity:${o};--x:${x}vw">${ch[i%ch.length]}</div>`; }
+  }
+  fx.innerHTML=html;
+  const fl=$("#flash"); if(fl) fl.className=(cat==="thunder")?"on":"";
+}
+
 /* ============ WHAT TO WEAR ADVISOR ============ */
 // o = {tmax,tmin,tcur,pop,wind,uv,code,isDay} in the user's current units
 function advise(o){
@@ -329,6 +408,34 @@ function saveCities(){ try{localStorage.setItem("wx_cities",JSON.stringify(STATE
 function saveActive(){ try{localStorage.setItem("wx_active",JSON.stringify(STATE.active));}catch(e){} }
 function saveUnit(){ try{localStorage.setItem("wx_unit",STATE.unit);}catch(e){} }
 
+/* ============ "YOUR STAY" — hotel/address/phone pushed in by the SWA shortcut ============ */
+var STAY=null;
+function loadStay(){ try{ STAY=JSON.parse(localStorage.getItem("wx_stay")||"null"); }catch(e){ STAY=null; } }
+function saveStay(){ try{ STAY?localStorage.setItem("wx_stay",JSON.stringify(STAY)):localStorage.removeItem("wx_stay"); }catch(e){} }
+function parseStay(q){
+  const hotel=(q.get("hotel")||"").trim(), addr=(q.get("addr")||q.get("address")||"").trim(),
+    phone=(q.get("phone")||q.get("tel")||"").trim(), trans=(q.get("transport")||q.get("trans")||"").trim(),
+    note=(q.get("note")||q.get("stay")||q.get("notes")||"").trim();
+  if(hotel||addr||phone||trans||note){ STAY={hotel,addr,phone,trans,note}; saveStay(); }
+}
+function clearStay(){ STAY=null; saveStay(); renderNow(); }
+function stayCardHTML(){
+  if(!STAY) return "";
+  const {hotel,addr,phone,trans,note}=STAY;
+  let ph=phone;
+  if(!ph && note){ const m=note.match(/(\+?\d[\d\-\s().]{7,}\d)/); if(m) ph=m[1].trim(); }
+  const mapq=encodeURIComponent([hotel,addr].filter(Boolean).join(" "));
+  let rows="";
+  if(hotel) rows+=`<div class="stayname">🏨 ${esc(hotel)}</div>`;
+  if(addr) rows+=`<a class="stayrow" href="https://maps.apple.com/?q=${mapq}" target="_blank" rel="noopener"><span class="e">📍</span><span class="tx">${esc(addr)}<small>Tap to open in Maps</small></span></a>`;
+  else if(hotel) rows+=`<a class="stayrow" href="https://maps.apple.com/?q=${mapq}" target="_blank" rel="noopener"><span class="e">📍</span><span class="tx">Find on map<small>Tap to open in Maps</small></span></a>`;
+  if(ph){ const tel=ph.replace(/[^\d+]/g,""); rows+=`<a class="stayrow" href="tel:${esc(tel)}"><span class="e">📞</span><span class="tx">${esc(ph)}<small>Tap to call</small></span></a>`; }
+  if(trans) rows+=`<div class="stayrow"><span class="e">🚗</span><span class="tx" style="color:var(--txt)">${esc(trans)}</span></div>`;
+  if(note && !hotel && !addr && !ph && !trans) rows+=`<div class="stayrow"><span class="e">📝</span><span class="tx" style="color:var(--txt)">${esc(note)}</span></div>`;
+  if(!rows) return "";
+  return `<div class="card"><h2>🏨 Your stay <span class="stayclear" onclick="clearStay()">clear ✕</span></h2>${rows}</div>`;
+}
+
 /* ============ HELPERS ============ */
 async function fetchJSON(u){ const r=await fetch(u,{cache:"no-store"}); if(!r.ok) throw new Error(r.status); return r.json(); }
 const isF=()=>STATE.unit==="F";
@@ -364,15 +471,16 @@ function renderHeader(){
   const clk=clockFor(c.tz);
   $("#locSub").textContent=[bits, clk?("🕓 "+clk+" local"):""].filter(Boolean).join(" · ");
   $("#locPin").textContent=c.geo?"📍":"🏙️";
-  const day=STATE.wx?STATE.wx.current.is_day:1;
-  document.body.classList.toggle("night",!day);
+  if(STATE.wx&&STATE.wx.current){ applyWeatherTheme(STATE.wx.current.weather_code, STATE.wx.current.is_day); }
+  else document.body.classList.toggle("night",!(STATE.wx?STATE.wx.current.is_day:1));
 }
 
 /* ============ RENDER: Now ============ */
 function renderNow(){
   const w=STATE.wx||SAMPLE; const cur=w.current, d=w.daily;
   const [ic,label]=wx(cur.weather_code,cur.is_day);
-  let h=`<div class="card"><div class="hero">
+  let h=stayCardHTML();
+  h+=`<div class="card"><div class="hero">
     <div class="ic">${ic}</div>
     <div class="temp">${Tn(cur.temperature_2m)}<sup>°${STATE.unit}</sup></div>
     <div class="desc">${esc(label)}</div>
@@ -736,14 +844,16 @@ async function selectCityByName(name){
 }
 function handleDeepLink(){
   const q=new URLSearchParams(location.search); let acted=false;
+  parseStay(q);   // hotel/address/phone from the SWA shortcut → "Your stay" card on Now
   if(q.get("trip")){ acted=true; addTripByName(q.get("trip"), normDate(q.get("date"))).then(ok=>{ if(ok) show("trip"); }); }
   else if(q.get("city")){ acted=true; selectCityByName(q.get("city")); }
   const g=q.get("geo"); if(g==="1"||g===""&&q.has("geo")){ acted=true; useMyLocation(); }
+  if(STAY){ renderNow(); show("now"); }   // make sure the stay card is visible immediately
   return acted;
 }
 
 /* ============ INIT ============ */
-load(); loadTrips(); buildClouds();
+load(); loadTrips(); loadStay(); buildClouds();
 $("#uF").classList.toggle("on",STATE.unit==="F"); $("#uC").classList.toggle("on",STATE.unit==="C");
 $("#tripDate").min=todayISO(); $("#tripDate").max=plusDaysISO(16); $("#tripDate").value=plusDaysISO(1);
 renderHeader(); renderNow();            // baked sample first paint
