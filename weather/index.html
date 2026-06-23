@@ -615,8 +615,29 @@ function addTrip(place, date){
   saveTrips(); renderTrips();
 }
 function removeTrip(k){ TRIPS=TRIPS.filter(t=>tripKey(t)!==k); saveTrips(); renderTrips(); }
+// IATA airport code -> city (so a flight calendar that stores "DEN"/"MDW" still resolves). Southwest-focused.
+const AIRPORT={ABQ:"Albuquerque",ALB:"Albany",AMA:"Amarillo",ATL:"Atlanta",AUS:"Austin",BDL:"Hartford",BHM:"Birmingham",BNA:"Nashville",BOI:"Boise",BOS:"Boston",BUF:"Buffalo",BUR:"Burbank",BWI:"Baltimore",BZN:"Bozeman",CHS:"Charleston",CLE:"Cleveland",CLT:"Charlotte",CMH:"Columbus",CRP:"Corpus Christi",DAL:"Dallas",DCA:"Washington",DEN:"Denver",DSM:"Des Moines",DTW:"Detroit",ELP:"El Paso",EWR:"Newark",FLL:"Fort Lauderdale",GEG:"Spokane",GRR:"Grand Rapids",HOU:"Houston",IAD:"Washington",IAH:"Houston",ICT:"Wichita",IND:"Indianapolis",ISP:"Islip",JAN:"Jackson",JAX:"Jacksonville",LAS:"Las Vegas",LAX:"Los Angeles",LGA:"New York",LGB:"Long Beach",LIT:"Little Rock",MAF:"Midland",MCI:"Kansas City",MCO:"Orlando",MDW:"Chicago",MEM:"Memphis",MHT:"Manchester",MIA:"Miami",MKE:"Milwaukee",MSP:"Minneapolis",MSY:"New Orleans",OAK:"Oakland",OKC:"Oklahoma City",OMA:"Omaha",ONT:"Ontario",ORD:"Chicago",ORF:"Norfolk",PBI:"West Palm Beach",PDX:"Portland",PHL:"Philadelphia",PHX:"Phoenix",PIT:"Pittsburgh",PVD:"Providence",PWM:"Portland",RDU:"Raleigh",RIC:"Richmond",RNO:"Reno",RSW:"Fort Myers",SAN:"San Diego",SAT:"San Antonio",SBA:"Santa Barbara",SDF:"Louisville",SEA:"Seattle",SFO:"San Francisco",SJC:"San Jose",SJU:"San Juan",SLC:"Salt Lake City",SMF:"Sacramento",SNA:"Santa Ana",STL:"St. Louis",TPA:"Tampa",TUL:"Tulsa",TUS:"Tucson"};
+// Accept "Denver", "Denver, CO", "DEN", "MDW-DEN"/"MDW to DEN" (uses the LAST code = destination).
+function cityQuery(raw){
+  let q=String(raw||"").trim(); if(!q) return "";
+  const codes=q.toUpperCase().match(/\b[A-Z]{3}\b/g);
+  if(codes&&codes.length){ const last=codes[codes.length-1]; if(AIRPORT[last]) return AIRPORT[last]; }
+  if(/^[A-Za-z]{3}$/.test(q)&&AIRPORT[q.toUpperCase()]) return AIRPORT[q.toUpperCase()];
+  if(q.indexOf(",")>0) q=q.split(",")[0].trim();   // "Denver, CO" -> "Denver"
+  return q;
+}
+// Normalize any date the Shortcut passes (raw calendar date, ISO, etc.) to YYYY-MM-DD.
+function normDate(raw){
+  if(!raw) return plusDaysISO(1);
+  raw=String(raw).trim();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  const d=new Date(raw);
+  if(!isNaN(d.getTime())) return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  return plusDaysISO(1);
+}
 async function addTripByName(name, date){
-  try{ const d=await fetchJSON(`${OM_GEO}?name=${encodeURIComponent(name)}&count=1&language=en&format=json`);
+  const q=cityQuery(name); if(!q) return false;
+  try{ const d=await fetchJSON(`${OM_GEO}?name=${encodeURIComponent(q)}&count=1&language=en&format=json`);
     const r=d.results&&d.results[0]; if(!r) return false;
     addTrip({name:r.name, admin:r.admin1||"", country:r.country_code||r.country||"", lat:r.latitude, lon:r.longitude, tz:r.timezone||"auto"}, date);
     return true;
@@ -715,7 +736,7 @@ async function selectCityByName(name){
 }
 function handleDeepLink(){
   const q=new URLSearchParams(location.search); let acted=false;
-  if(q.get("trip")){ acted=true; addTripByName(q.get("trip"), q.get("date")||plusDaysISO(1)).then(ok=>{ if(ok) show("trip"); }); }
+  if(q.get("trip")){ acted=true; addTripByName(q.get("trip"), normDate(q.get("date"))).then(ok=>{ if(ok) show("trip"); }); }
   else if(q.get("city")){ acted=true; selectCityByName(q.get("city")); }
   const g=q.get("geo"); if(g==="1"||g===""&&q.has("geo")){ acted=true; useMyLocation(); }
   return acted;
