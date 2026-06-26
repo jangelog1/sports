@@ -126,12 +126,12 @@
 <script>
 const PROXY='https://api.allorigins.win/get?url=';
 const Y='https://query1.finance.yahoo.com/v8/finance';
-const NAMES={RKLB:'Rocket Lab',NVDA:'NVIDIA',AAPL:'Apple',MSFT:'Microsoft',TSLA:'Tesla',AMZN:'Amazon',
-  GOOGL:'Alphabet',AMD:'AMD',PLTR:'Palantir',SPY:'S&P 500 ETF','^GSPC':'S&P 500','^IXIC':'Nasdaq','^DJI':'Dow Jones'};
-const DEFAULT_LIST=['RKLB','NVDA','AAPL','MSFT','TSLA','AMZN','GOOGL','AMD','PLTR','SPY'];
+const NAMES={LUV:'Southwest Air',RKLB:'Rocket Lab',NVDA:'NVIDIA',AAPL:'Apple',MSFT:'Microsoft',TSLA:'Tesla',
+  AMZN:'Amazon',GOOGL:'Alphabet',AMD:'AMD',PLTR:'Palantir',SPY:'S&P 500 ETF','^GSPC':'S&P 500','^IXIC':'Nasdaq','^DJI':'Dow Jones'};
+const DEFAULT_LIST=['LUV','RKLB','NVDA','AAPL','MSFT','TSLA','AMZN','GOOGL','AMD','PLTR','SPY'];
 const INDICES=['^GSPC','^IXIC','^DJI'];
 // Baked "as of" snapshot so first paint / offline shows real numbers (chip flips to Snapshot).
-const SNAP={NVDA:{p:195.74,pc:198.91},GOOGL:{p:343.71,pc:345.28},AAPL:{p:275.15,pc:293.17},
+const SNAP={LUV:{p:52.09,pc:50.94},NVDA:{p:195.74,pc:198.91},GOOGL:{p:343.71,pc:345.28},AAPL:{p:275.15,pc:293.17},
   '^IXIC':{p:25358.6,pc:25476.64},RKLB:{p:80.69,pc:85.41},'^DJI':{p:51920.62,pc:51848.9},
   MSFT:{p:352.83,pc:365.45},TSLA:{p:375.12,pc:375.47},'^GSPC':{p:7357.49,pc:7358.22},
   AMD:{p:532.57,pc:519.06},SPY:{p:734.3,pc:733.24},AMZN:{p:227.01,pc:234.37},PLTR:{p:107.27,pc:113.51}};
