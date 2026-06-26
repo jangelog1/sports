@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Stocks">
+<link rel="apple-touch-icon" href="icon-512.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Stocks</title>
+<style>
+  :root{--bg:#0a0d13;--card:rgba(21,27,39,.72);--card2:#1b2434;--line:#2a3344;--txt:#eef2f8;--mut:#9aa6b8;
+    --up:#19c37d;--down:#ff5c6c;--accent:#19c37d;--amber:#f4b740}
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:radial-gradient(900px 520px at 50% -10%,#16203a 0%,var(--bg) 55%);color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;min-height:100vh;
+    -webkit-tap-highlight-color:transparent}
+  .wrap{max-width:560px;margin:0 auto;padding:env(safe-area-inset-top) 14px 40px;padding-top:26px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  header h1{margin:0;font-size:24px;letter-spacing:.2px}
+  header .sub{color:var(--mut);font-size:12.5px;margin-top:3px}
+  .chip{font-size:10px;font-weight:800;padding:3px 8px;border-radius:7px;white-space:nowrap}
+  .chip.live{color:#04221a;background:var(--up);animation:p 1.8s infinite}
+  .chip.snap{color:#2a1d00;background:var(--amber)}
+  .chip.upd{color:#04221a;background:#3a4456;color:#cdd6e4}
+  @keyframes p{0%,100%{opacity:1}50%{opacity:.5}}
+  .tools{display:flex;gap:8px;margin-top:8px}
+  .iconbtn{background:var(--card);border:1px solid var(--line);color:var(--txt);border-radius:11px;
+    padding:8px 11px;font-size:13px;font-weight:700;cursor:pointer}
+  .iconbtn:active{transform:scale(.96)}
+  /* markets strip */
+  .mkts{display:flex;gap:9px;overflow-x:auto;margin:16px 0 6px;padding-bottom:4px;scrollbar-width:none}
+  .mkts::-webkit-scrollbar{display:none}
+  .mkt{flex:0 0 auto;min-width:104px;background:var(--card);border:1px solid var(--line);border-radius:13px;
+    padding:9px 11px;backdrop-filter:blur(8px)}
+  .mkt .nm{font-size:11px;color:var(--mut);font-weight:700}
+  .mkt .px{font-size:15px;font-weight:800;margin-top:2px}
+  .mkt .ch{font-size:11.5px;font-weight:800;margin-top:1px}
+  /* add row */
+  .addrow{display:flex;gap:8px;margin:6px 0 14px}
+  .addrow input{flex:1;background:var(--card);border:1px solid var(--line);color:var(--txt);border-radius:12px;
+    padding:11px 13px;font-size:15px;outline:none;text-transform:uppercase}
+  .addrow input::placeholder{text-transform:none;color:var(--mut)}
+  .addbtn{background:var(--accent);color:#04221a;border:none;border-radius:12px;padding:0 16px;font-size:15px;
+    font-weight:800;cursor:pointer}
+  /* list */
+  .list{display:flex;flex-direction:column;gap:11px}
+  .row{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
+    border-radius:16px;padding:14px 15px;cursor:pointer;backdrop-filter:blur(8px);
+    transition:transform .12s ease,border-color .12s}
+  .row:active{transform:scale(.99)}
+  .row .sy{flex:0 0 auto}
+  .row .sym{font-size:17px;font-weight:800}
+  .row .name{font-size:11.5px;color:var(--mut);margin-top:2px;max-width:140px;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  .row .spark{flex:1;height:34px;min-width:40px}
+  .row .pr{flex:0 0 auto;text-align:right}
+  .row .price{font-size:17px;font-weight:800}
+  .row .chg{font-size:12.5px;font-weight:800;margin-top:2px}
+  .up{color:var(--up)} .down{color:var(--down)} .flat{color:var(--mut)}
+  .rm{flex:0 0 auto;color:var(--down);font-size:20px;font-weight:800;padding:0 4px;display:none}
+  body.edit .rm{display:block}
+  body.edit .row{cursor:default}
+  .updated{color:var(--mut);font-size:11px;text-align:center;margin-top:18px;line-height:1.6}
+  /* detail modal */
+  .modal{position:fixed;inset:0;background:rgba(4,7,12,.66);backdrop-filter:blur(3px);display:none;
+    align-items:flex-end;z-index:50}
+  .modal.open{display:flex}
+  .sheet{background:#0f1623;border:1px solid var(--line);border-bottom:none;border-radius:22px 22px 0 0;
+    width:100%;max-width:560px;margin:0 auto;padding:18px 18px calc(26px + env(safe-area-inset-bottom));
+    max-height:88vh;overflow-y:auto}
+  .grab{width:42px;height:5px;background:#34405422;background:#3a4456;border-radius:3px;margin:0 auto 14px}
+  .dhead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .dhead .dsym{font-size:22px;font-weight:800}
+  .dhead .dname{font-size:13px;color:var(--mut);margin-top:2px}
+  .dclose{background:var(--card2);border:1px solid var(--line);color:var(--txt);border-radius:10px;
+    padding:7px 11px;font-weight:800;cursor:pointer}
+  .dprice{font-size:34px;font-weight:800;margin-top:12px}
+  .dchg{font-size:15px;font-weight:800;margin-top:2px}
+  .bigspark{width:100%;height:120px;margin:14px 0 6px}
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:11px 13px}
+  .stat .k{font-size:11px;color:var(--mut);font-weight:700}
+  .stat .v{font-size:15px;font-weight:800;margin-top:3px}
+  .rangebar{height:6px;background:#283145;border-radius:4px;position:relative;margin-top:9px}
+  .rangebar .dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:var(--txt);
+    border:2px solid #0f1623;transform:translateX(-50%)}
+  .rangelabels{display:flex;justify-content:space-between;font-size:10.5px;color:var(--mut);margin-top:5px}
+  .dnote{font-size:11.5px;color:var(--mut);margin-top:14px;line-height:1.5}
+  .err{color:var(--amber);font-size:12px;text-align:center;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>📈 Stocks</h1>
+      <div class="sub">Your watchlist · live prices · tap for detail</div>
+    </div>
+    <span id="chip" class="chip upd">…</span>
+  </header>
+  <div class="tools">
+    <button class="iconbtn" id="refresh">↻ Refresh</button>
+    <button class="iconbtn" id="editToggle">✎ Edit</button>
+  </div>
+
+  <div class="mkts" id="mkts"></div>
+
+  <div class="addrow">
+    <input id="addInput" placeholder="Add a ticker (e.g. COIN, ASTS)" autocapitalize="characters" autocomplete="off">
+    <button class="addbtn" id="addBtn">Add</button>
+  </div>
+
+  <div class="list" id="list"></div>
+  <div id="addErr" class="err"></div>
+
+  <div class="updated" id="updated"></div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="sheet" id="sheet"></div>
+</div>
+
+<script>
+const PROXY='https://api.allorigins.win/get?url=';
+const Y='https://query1.finance.yahoo.com/v8/finance';
+const NAMES={RKLB:'Rocket Lab',NVDA:'NVIDIA',AAPL:'Apple',MSFT:'Microsoft',TSLA:'Tesla',AMZN:'Amazon',
+  GOOGL:'Alphabet',AMD:'AMD',PLTR:'Palantir',SPY:'S&P 500 ETF','^GSPC':'S&P 500','^IXIC':'Nasdaq','^DJI':'Dow Jones'};
+const DEFAULT_LIST=['RKLB','NVDA','AAPL','MSFT','TSLA','AMZN','GOOGL','AMD','PLTR','SPY'];
+const INDICES=['^GSPC','^IXIC','^DJI'];
+// Baked "as of" snapshot so first paint / offline shows real numbers (chip flips to Snapshot).
+const SNAP={NVDA:{p:195.74,pc:198.91},GOOGL:{p:343.71,pc:345.28},AAPL:{p:275.15,pc:293.17},
+  '^IXIC':{p:25358.6,pc:25476.64},RKLB:{p:80.69,pc:85.41},'^DJI':{p:51920.62,pc:51848.9},
+  MSFT:{p:352.83,pc:365.45},TSLA:{p:375.12,pc:375.47},'^GSPC':{p:7357.49,pc:7358.22},
+  AMD:{p:532.57,pc:519.06},SPY:{p:734.3,pc:733.24},AMZN:{p:227.01,pc:234.37},PLTR:{p:107.27,pc:113.51}};
+
+const $=s=>document.querySelector(s);
+const lsGet=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}};
+const lsSet=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+let watch=lsGet('stocks_watchlist',DEFAULT_LIST.slice());
+let nameCache=lsGet('stocks_names',{});
+const nameOf=s=>NAMES[s]||nameCache[s]||s;
+
+function fmt(n,dec){ if(n==null||isNaN(n))return '—';
+  return n.toLocaleString('en-US',{minimumFractionDigits:dec??2,maximumFractionDigits:dec??2}); }
+function setChip(state){ const c=$('#chip');
+  if(state==='live'){c.className='chip live';c.textContent='● LIVE';}
+  else if(state==='snap'){c.className='chip snap';c.textContent='SNAPSHOT';}
+  else {c.className='chip upd';c.textContent='UPDATING…';} }
+
+// fetch any Yahoo URL through the keyless CORS proxy, with generous retries
+// (allorigins rate-limits hard with tiny error bodies; it succeeds within a few tries)
+async function proxy(url,tries=9){
+  for(let i=0;i<tries;i++){
+    try{
+      const r=await fetch(PROXY+encodeURIComponent(url),{cache:'no-store'});
+      if(r.ok){ const j=await r.json(); if(j&&j.contents&&j.contents.trim().length>5) return JSON.parse(j.contents); }
+    }catch(e){}
+    await new Promise(z=>setTimeout(z,Math.min(2500,600+i*450)));
+  }
+  throw new Error('proxy failed');
+}
+
+// batch quotes for a list of symbols via the spark endpoint (one request)
+async function sparkBatch(syms){
+  const url=`${Y}/spark?symbols=${syms.map(encodeURIComponent).join(',')}&range=1d&interval=15m`;
+  const d=await proxy(url);
+  const out={};
+  for(const s of syms){ const v=d[s]; if(v&&typeof v==='object'){
+    const close=(v.close||[]).filter(x=>x!=null);
+    out[s]={p:close.length?close[close.length-1]:null,pc:v.chartPreviousClose,spark:close};
+  }}
+  return out;
+}
+
+function changeClass(p,pc){ if(p==null||pc==null)return 'flat'; if(p>pc)return 'up'; if(p<pc)return 'down'; return 'flat'; }
+function changeStr(p,pc,big){ if(p==null||pc==null)return '—';
+  const d=p-pc, pct=pc?d/pc*100:0, arrow=d>0?'▲':d<0?'▼':'•';
+  const dec=Math.abs(p)>=1000?2:2;
+  return `${arrow} ${fmt(Math.abs(d),dec)} (${d>=0?'+':'−'}${fmt(Math.abs(pct),2)}%)`; }
+
+function miniSpark(arr,cls){
+  if(!arr||arr.length<2)return '';
+  const w=80,h=34,min=Math.min(...arr),max=Math.max(...arr),rng=(max-min)||1;
+  const pts=arr.map((v,i)=>`${(i/(arr.length-1)*w).toFixed(1)},${(h-((v-min)/rng)*h).toFixed(1)}`).join(' ');
+  const col=cls==='up'?'#19c37d':cls==='down'?'#ff5c6c':'#9aa6b8';
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+}
+
+function renderMarkets(data,snap){
+  $('#mkts').innerHTML=INDICES.map(s=>{
+    const q=data[s]||snap[s]||{}, cls=changeClass(q.p,q.pc);
+    return `<div class="mkt"><div class="nm">${nameOf(s)}</div>
+      <div class="px">${fmt(q.p,2)}</div>
+      <div class="ch ${cls}">${changeStr(q.p,q.pc)}</div></div>`;
+  }).join('');
+}
+function renderList(data,snap){
+  $('#list').innerHTML=watch.map(s=>{
+    const q=data[s]||snap[s]||{}, cls=changeClass(q.p,q.pc);
+    return `<div class="row" data-sym="${s}">
+      <div class="rm" data-rm="${s}">×</div>
+      <div class="sy"><div class="sym">${s}</div><div class="name">${nameOf(s)}</div></div>
+      ${miniSpark(q.spark,cls)}
+      <div class="pr"><div class="price">${fmt(q.p,2)}</div>
+        <div class="chg ${cls}">${changeStr(q.p,q.pc)}</div></div>
+    </div>`;
+  }).join('');
+  document.querySelectorAll('.row').forEach(r=>r.addEventListener('click',e=>{
+    if(document.body.classList.contains('edit'))return;
+    openDetail(r.dataset.sym);
+  }));
+  document.querySelectorAll('[data-rm]').forEach(b=>b.addEventListener('click',e=>{
+    e.stopPropagation(); removeSym(b.dataset.rm);
+  }));
+}
+
+let lastData={};
+async function refresh(){
+  setChip('upd');
+  const syms=[...new Set([...watch,...INDICES])];
+  try{
+    const data=await sparkBatch(syms);
+    lastData=data;
+    renderMarkets(data,SNAP); renderList(data,SNAP);
+    setChip('live');
+    const t=new Date();
+    $('#updated').innerHTML=`Updated ${t.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})} · live via Yahoo Finance (keyless)<br>Prices may be delayed ~15 min. Not investment advice.`;
+  }catch(e){
+    renderMarkets(SNAP,SNAP); renderList(SNAP,SNAP);
+    setChip('snap');
+    $('#updated').innerHTML=`Showing baked snapshot — couldn't reach the live feed.<br>Pull Refresh to retry. Not investment advice.`;
+  }
+}
+
+async function openDetail(sym){
+  const m=$('#modal'), sheet=$('#sheet'); m.classList.add('open');
+  const base=lastData[sym]||SNAP[sym]||{};
+  sheet.innerHTML=`<div class="grab"></div>
+    <div class="dhead"><div><div class="dsym">${sym}</div><div class="dname">${nameOf(sym)}</div></div>
+      <button class="dclose" id="dclose">Close</button></div>
+    <div class="dprice">${fmt(base.p,2)}</div>
+    <div class="dchg ${changeClass(base.p,base.pc)}">${changeStr(base.p,base.pc)}</div>
+    <div class="dnote">Loading 6-month history…</div>`;
+  $('#dclose').addEventListener('click',closeDetail);
+  try{
+    const d=await proxy(`${Y}/chart/${encodeURIComponent(sym)}?range=6mo&interval=1d`);
+    const res=d.chart.result[0], meta=res.meta;
+    const closes=(res.indicators.quote[0].close||[]).filter(x=>x!=null);
+    if(meta.shortName){ nameCache[sym]=meta.shortName.replace(/,?\s*(Inc\.?|Corporation|Corp\.?|Ltd\.?|plc).*$/i,'').trim(); lsSet('stocks_names',nameCache); }
+    // Headline change must be the 1-DAY move (matches the row). Yahoo's meta.chartPreviousClose on a
+    // 6mo range is the price from 6 months ago, so derive prev close from the daily series / batch instead.
+    const p=meta.regularMarketPrice ?? base.p ?? closes[closes.length-1];
+    const pc=(base.pc!=null)?base.pc:(closes.length>1?closes[closes.length-2]:meta.chartPreviousClose);
+    const cls=changeClass(p,pc);
+    const dl=meta.regularMarketDayLow, dh=meta.regularMarketDayHigh;
+    const yl=meta.fiftyTwoWeekLow, yh=meta.fiftyTwoWeekHigh;
+    const pos=(lo,hi,v)=>hi>lo?Math.max(0,Math.min(100,(v-lo)/(hi-lo)*100)):50;
+    const big=bigSpark(closes,cls);
+    sheet.innerHTML=`<div class="grab"></div>
+      <div class="dhead"><div><div class="dsym">${sym}</div><div class="dname">${nameOf(sym)}</div></div>
+        <button class="dclose" id="dclose">Close</button></div>
+      <div class="dprice">${fmt(p,2)}</div>
+      <div class="dchg ${cls}">${changeStr(p,pc)}</div>
+      ${big}
+      <div class="stats">
+        <div class="stat"><div class="k">Day range</div><div class="v">${fmt(dl,2)} – ${fmt(dh,2)}</div>
+          <div class="rangebar"><div class="dot" style="left:${pos(dl,dh,p)}%"></div></div></div>
+        <div class="stat"><div class="k">52-week range</div><div class="v">${fmt(yl,2)} – ${fmt(yh,2)}</div>
+          <div class="rangebar"><div class="dot" style="left:${pos(yl,yh,p)}%"></div></div></div>
+        <div class="stat"><div class="k">Prev close</div><div class="v">${fmt(pc,2)}</div></div>
+        <div class="stat"><div class="k">Volume</div><div class="v">${meta.regularMarketVolume?meta.regularMarketVolume.toLocaleString('en-US'):'—'}</div></div>
+      </div>
+      <div class="dnote">${meta.fullExchangeName||meta.exchangeName||''} · ${meta.currency||'USD'} · 6-month daily chart.
+        Delayed ~15 min via Yahoo Finance. Not investment advice.</div>`;
+    $('#dclose').addEventListener('click',closeDetail);
+    renderList(lastData,SNAP); renderMarkets(lastData,SNAP); // refresh names if newly cached
+  }catch(e){
+    const note=sheet.querySelector('.dnote'); if(note)note.innerHTML='Couldn\'t load history right now — tap Close and try again.';
+  }
+}
+function bigSpark(arr,cls){
+  if(!arr||arr.length<2)return '';
+  const w=320,h=120,min=Math.min(...arr),max=Math.max(...arr),rng=(max-min)||1;
+  const pts=arr.map((v,i)=>`${(i/(arr.length-1)*w).toFixed(1)},${(h-((v-min)/rng)*h*.92-h*.04).toFixed(1)}`).join(' ');
+  const col=cls==='up'?'#19c37d':cls==='down'?'#ff5c6c':'#9aa6b8';
+  const area=`0,${h} ${pts} ${w},${h}`;
+  return `<svg class="bigspark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <polygon points="${area}" fill="${col}" opacity="0.10"/>
+    <polyline points="${pts}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+}
+function closeDetail(){ $('#modal').classList.remove('open'); }
+$('#modal').addEventListener('click',e=>{ if(e.target.id==='modal')closeDetail(); });
+
+function addSym(){
+  let s=$('#addInput').value.trim().toUpperCase().replace(/[^A-Z0-9.^-]/g,'');
+  $('#addErr').textContent='';
+  if(!s)return;
+  if(watch.includes(s)){ $('#addErr').textContent=s+' is already on your list.'; return; }
+  watch.push(s); lsSet('stocks_watchlist',watch); $('#addInput').value='';
+  renderList(lastData,SNAP); refresh();
+}
+function removeSym(s){ watch=watch.filter(x=>x!==s); lsSet('stocks_watchlist',watch); renderList(lastData,SNAP); }
+$('#addBtn').addEventListener('click',addSym);
+$('#addInput').addEventListener('keydown',e=>{ if(e.key==='Enter')addSym(); });
+$('#refresh').addEventListener('click',refresh);
+$('#editToggle').addEventListener('click',()=>document.body.classList.toggle('edit'));
+
+// deep link: ?add=TICKER (handy for an iOS Shortcut)
+const qp=new URLSearchParams(location.search);
+if(qp.get('add')){ const s=qp.get('add').toUpperCase(); if(!watch.includes(s)){watch.push(s);lsSet('stocks_watchlist',watch);} }
+
+refresh();
+setInterval(refresh,60000);
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden)refresh(); });
+
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+</script>
+</body>
+</html>
