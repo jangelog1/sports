@@ -1,5 +1,5 @@
 // Stocks dashboard service worker — network-first so updates reach installed apps.
-const CACHE = 'stocks-v1';
+const CACHE = 'stocks-v2';
 const ASSETS = ['./', 'index.html', 'icon-512.png', 'manifest.webmanifest'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
