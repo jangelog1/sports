@@ -73,10 +73,40 @@ main{padding:12px;max-width:640px;margin:0 auto}
   </div>
 </main>
 <script>
-/* runtime added in Task 2 */
+/* ============ TILE RUNTIME ============ */
+const TILES=[];const $=s=>document.querySelector(s);
+function reg(id,mod){TILES.push({id,el:$('#t-'+id),...mod,state:mod.snapshot});}
+function setVal(el,html,sub){
+  const b=el.querySelector('.big');
+  if(b.innerHTML!==html){b.innerHTML=html;el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash');}
+  const s=el.querySelector('.sub');if(s&&sub!==undefined)s.innerHTML=sub;
+}
+function chip(el,text){
+  let c=el.querySelector('.chip');
+  if(!text){if(c)c.remove();return;}
+  if(!c){c=document.createElement('span');c.className='chip';el.querySelector('.lbl').appendChild(c);}
+  c.textContent=text;
+}
+function pickHero(es){return es.reduce((a,b)=>b&&(!a||b.p>a.p)?b:a,null);}
+let passing=false;
+async function pass(){
+  if(passing)return;passing=true;
+  await Promise.allSettled(TILES.map(async t=>{
+    try{t.state=await t.fetch();t.ok=true;chip(t.el,null);}
+    catch(e){t.ok=false;t.state=t.state||t.snapshot;chip(t.el,'snapshot');}
+    try{t.render(t.el,t.state);}catch(e){}
+  }));
+  const h=pickHero(TILES.map(t=>t.hero?t.hero(t.state):null).filter(Boolean));
+  const hb=$('#hero');
+  if(h){hb.innerHTML=h.html;hb.style.display='block';}
+  else{hb.innerHTML='';hb.style.display='none';}
+}
+/* tiles register below (Tasks 3-8), then boot at end of script */
 if("serviceWorker" in navigator && location.protocol.startsWith("http")){
   window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 }
+/* ============ BOOT ============ */
+pass();setInterval(pass,60000);
 </script>
 </body>
 </html>
