@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#07070f">
+<title>🚀 Mission Control</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-512.png">
+<style>
+:root{--bg:#07070f;--tile:#0d0d1d;--muted:#8b93b8;--line:#262645;
+  --teal:#00f5d4;--pink:#f15bb5;--purp:#c084fc;--blue:#38bdf8}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:#eaf6ff;font-family:-apple-system,system-ui,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+#now{background:linear-gradient(-45deg,#0d0d2b,#1b1040,#0a2a3f,#0d0d2b);background-size:300% 300%;animation:drift 12s ease infinite;
+  padding:calc(env(safe-area-inset-top,0px) + 14px) 16px 14px;display:flex;justify-content:space-between;align-items:baseline;font-weight:800}
+#now .d{font-size:15px}#now .d small{display:block;font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+#now .c{font-size:22px;font-variant-numeric:tabular-nums}
+@keyframes drift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+main{padding:12px;max-width:640px;margin:0 auto}
+#hero{display:none}
+#hero .tile{box-shadow:0 0 24px rgba(241,91,181,.18);margin-bottom:10px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:var(--tile);border-radius:14px;padding:12px 14px;position:relative;font-weight:600;font-size:13px;cursor:pointer;overflow:hidden}
+.tile::before{content:"";position:absolute;inset:-1px;border-radius:15px;padding:1px;
+  background:linear-gradient(90deg,#00f5d4,#f15bb5,#9b5de5,#00bbf9,#00f5d4);background-size:200% 100%;animation:glow 3s linear infinite;
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;z-index:0;pointer-events:none}
+.tile>*{position:relative;z-index:1}
+@keyframes glow{to{background-position:200% 0%}}
+.lbl{font-size:11px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:6px}
+.big{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;margin-top:6px;display:block;line-height:1.25}
+.sub{font-size:11px;color:var(--muted);font-weight:600;margin-top:3px;display:block}
+.dot{width:8px;height:8px;border-radius:50%;background:#ff3b5c;display:inline-block;margin-right:6px;animation:pulse 1.2s infinite;vertical-align:baseline}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+.chip{font-size:9px;color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:1px 6px;font-weight:700;flex:none}
+.a-teal{color:var(--teal);text-shadow:0 0 12px rgba(0,245,212,.55)}
+.a-pink{color:var(--pink);text-shadow:0 0 12px rgba(241,91,181,.55)}
+.a-purp{color:var(--purp);text-shadow:0 0 12px rgba(155,93,229,.55)}
+.a-blue{color:var(--blue);text-shadow:0 0 10px rgba(0,187,249,.5)}
+.a-red{color:#f87171;text-shadow:0 0 12px rgba(248,113,113,.5)}
+@keyframes flashy{0%{background:#26264d}100%{background:var(--tile)}}
+.flash{animation:flashy .8s ease-out}
+.wcteams{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700;margin-top:8px;flex-wrap:wrap}
+.wcteams .fl{font-size:22px}
+.mono b{min-width:2ch;display:inline-block;text-align:right}
+.mono small{font-size:10px;color:var(--muted);font-weight:700;margin-right:4px}
+</style>
+</head>
+<body>
+<header id="now">
+  <div class="d"><span id="nowDate">—</span><small id="nowCity">locating…</small></div>
+  <div class="c" id="nowClock">—:—</div>
+</header>
+<main>
+  <div id="hero"></div>
+  <div id="grid" class="g2">
+    <div class="tile" id="t-wc" onclick="location.href='https://jangelog1.github.io/worldcup2026/'">
+      <div class="lbl"><span>⚽ World Cup 2026</span></div><span class="big">—</span><span class="sub"></span></div>
+    <div class="tile" id="t-stk" onclick="location.href='../stocks/'">
+      <div class="lbl"><span>📈 Portfolio</span></div><span class="big">—</span><span class="sub"></span></div>
+    <div class="tile" id="t-trip" onclick="location.href='../trips/'">
+      <div class="lbl"><span>✈️ Next trip</span></div><span class="big">—</span><span class="sub"></span></div>
+    <div class="tile" id="t-wx" onclick="location.href='../weather/'">
+      <div class="lbl"><span>🌤️ Weather</span></div><span class="big">—</span><span class="sub"></span></div>
+    <div class="tile" id="t-sox" onclick="location.href='../whitesox/'">
+      <div class="lbl"><span>⚾ White Sox</span></div><span class="big">—</span><span class="sub"></span></div>
+    <div class="tile" id="t-bears" onclick="location.href='../bears/'">
+      <div class="lbl"><span>🐻 Bears</span></div><span class="big">—</span><span class="sub"></span></div>
+    <div class="tile" id="t-euro" onclick="location.href='https://jangelog1.github.io/euro-football/'">
+      <div class="lbl"><span>🇪🇸 Euro footy</span></div><span class="big">—</span><span class="sub"></span></div>
+  </div>
+</main>
+<script>
+/* runtime added in Task 2 */
+if("serviceWorker" in navigator && location.protocol.startsWith("http")){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+}
+</script>
+</body>
+</html>
