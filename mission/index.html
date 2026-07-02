@@ -225,6 +225,46 @@ reg('wc',{
         <span>${s.live.a}</span><span class="fl">${wcFl(s.live.a)}</span></div></div>`};
   }
 });
+
+/* ============ WHITE SOX (MLB statsapi, keyless) ============ */
+const soxAbbr=n=>({"Detroit Tigers":"DET","Cleveland Guardians":"CLE","Kansas City Royals":"KC","Minnesota Twins":"MIN",
+  "New York Yankees":"NYY","Boston Red Sox":"BOS","Chicago Cubs":"CUBS","Houston Astros":"HOU","Texas Rangers":"TEX",
+  "Los Angeles Angels":"LAA","Oakland Athletics":"ATH","Seattle Mariners":"SEA","Tampa Bay Rays":"TB","Toronto Blue Jays":"TOR",
+  "Baltimore Orioles":"BAL"}[n]||n.split(" ").pop().slice(0,3).toUpperCase());
+function ymd(d){return d.toLocaleDateString("en-CA",{timeZone:"America/Chicago"});}
+reg('sox',{
+  snapshot:{mode:'none'},
+  fetch:async()=>{
+    const t=new Date(),y=new Date(t-864e5),w=new Date(+t+7*864e5);
+    const r=await fetch(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=145&startDate=${ymd(y)}&endDate=${ymd(w)}`);
+    const d=await r.json();
+    const games=(d.dates||[]).flatMap(x=>x.games||[]);
+    const side=g=>g.teams.home.team.id===145?['home','away']:['away','home'];
+    const live=games.find(g=>g.status.abstractGameState==="Live");
+    if(live){const [me,opp]=side(live);
+      return {mode:'live',my:live.teams[me].score??0,their:live.teams[opp].score??0,opp:soxAbbr(live.teams[opp].team.name)};}
+    const today=ymd(t);
+    const fin=games.filter(g=>g.status.abstractGameState==="Final"&&g.officialDate===today).pop();
+    if(fin){const [me,opp]=side(fin);const w2=fin.teams[me].score>fin.teams[opp].score;
+      return {mode:'final',res:w2?'W':'L',my:fin.teams[me].score,their:fin.teams[opp].score,opp:soxAbbr(fin.teams[opp].team.name)};}
+    const nxt=games.filter(g=>g.status.abstractGameState==="Preview").sort((a,b)=>new Date(a.gameDate)-new Date(b.gameDate))[0];
+    if(nxt){const [,opp]=side(nxt);const gd=new Date(nxt.gameDate);
+      const day=gd.toLocaleDateString("en-US",{timeZone:"America/Chicago",weekday:'short'});
+      const tm=gd.toLocaleTimeString("en-US",{timeZone:"America/Chicago",hour:'numeric',minute:'2-digit'});
+      return {mode:'next',day,tm,opp:soxAbbr(nxt.teams[opp].team.name),vs:nxt.teams.home.team.id===145?'vs':'@'};}
+    return {mode:'none'};
+  },
+  render:(el,s)=>{
+    if(s.mode==='live'){el.querySelector('.lbl span').innerHTML='<span class="dot"></span>⚾ Sox · LIVE';
+      setVal(el,`<span class="a-teal">${s.my}–${s.their}</span>`,`vs ${s.opp}`);}
+    else if(s.mode==='final')setVal(el,`<span class="${s.res==='W'?'a-teal':'a-red'}">${s.res} ${s.my}–${s.their}</span>`,`vs ${s.opp} · final`);
+    else if(s.mode==='next')setVal(el,s.tm,`${s.day} ${s.vs} ${s.opp}`);
+    else setVal(el,'—','No games scheduled');
+  },
+  hero:s=>s.mode==='live'?{p:99,html:`<div class="tile" onclick="location.href='../whitesox/'">
+    <div class="lbl"><span><span class="dot"></span>White Sox · LIVE</span></div>
+    <span class="big a-teal">SOX ${s.my}–${s.their} ${s.opp}</span></div>`}:null
+});
 if("serviceWorker" in navigator && location.protocol.startsWith("http")){
   window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 }
