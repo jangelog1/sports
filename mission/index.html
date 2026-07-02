@@ -102,6 +102,40 @@ async function pass(){
   else{hb.innerHTML='';hb.style.display='none';}
 }
 /* tiles register below (Tasks 3-8), then boot at end of script */
+
+/* ============ NOW STRIP + TRIPS ============ */
+const TRIPS=[["Austin","2026-07-20"],["Tokyo","2026-09-19"],["San Juan","2026-10-04"]];
+function nextTrip(){const now=Date.now();
+  const t=TRIPS.map(([n,d])=>[n,new Date(d+"T12:00:00")]).find(([,d])=>d>now);
+  return t?{name:t[0],at:t[1]}:null;}
+function cdHTML(ms){const s=Math.max(0,Math.floor(ms/1000));
+  const d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60),ss=s%60;
+  const seg=(v,u)=>`<b>${String(v).padStart(2,'0')}</b><small>${u}</small>`;
+  return `<span class="a-purp mono" style="display:inline-flex;gap:2px;align-items:baseline">${seg(d,'D')}${seg(h,'H')}${seg(m,'M')}${seg(ss,'S')}</span>`;}
+reg('trip',{
+  snapshot:null,
+  fetch:async()=>nextTrip(),
+  render:(el,t)=>{
+    if(!t){setVal(el,'<span class="sub">No trips booked</span>','');return;}
+    el.querySelector('.lbl span').textContent='✈️ '+t.name;
+    setVal(el,cdHTML(t.at-Date.now()),t.at.toLocaleDateString("en-US",{weekday:'short',month:'short',day:'numeric'}));
+  },
+  hero:t=>{
+    if(!t)return null;
+    const ms=t.at-Date.now();
+    if(ms<86400000)return {p:90,html:`<div class="tile"><div class="lbl"><span>✈️ ${t.name} — departure day!</span></div><span class="big">${cdHTML(ms)}</span></div>`};
+    return {p:10-((ms/60000)/100000),html:`<div class="tile" onclick="location.href='../trips/'"><div class="lbl"><span>✈️ Next up: ${t.name}</span></div><span class="big">${cdHTML(ms)}</span></div>`};
+  }
+});
+function tickNow(){
+  const n=new Date();
+  $('#nowClock').textContent=n.toLocaleTimeString("en-US",{hour:'numeric',minute:'2-digit'});
+  $('#nowDate').textContent=n.toLocaleDateString("en-US",{weekday:'long',month:'long',day:'numeric'});
+  const t=TILES.find(x=>x.id==='trip');
+  if(t&&t.state){const b=t.el.querySelector('.big');b.innerHTML=cdHTML(t.state.at-Date.now());
+    const hb=$('#hero .big');if(hb&&$('#hero .lbl span')&&$('#hero .lbl span').textContent.includes(t.state.name))hb.innerHTML=cdHTML(t.state.at-Date.now());}
+}
+tickNow();setInterval(tickNow,1000);
 if("serviceWorker" in navigator && location.protocol.startsWith("http")){
   window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 }
