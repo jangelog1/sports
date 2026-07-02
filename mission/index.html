@@ -305,6 +305,61 @@ reg('euro',{
     else setVal(el,'—','No fixtures');
   }
 });
+
+/* ============ STOCKS (Yahoo via allorigins — proxy pattern lifted from ../stocks/) ============ */
+const PROXY='https://api.allorigins.win/get?url=';
+const Y='https://query1.finance.yahoo.com';
+async function proxy(url,tries=9){
+  for(let i=0;i<tries;i++){
+    try{ const r=await fetch(PROXY+encodeURIComponent(url),{cache:'no-store'});
+      if(r.ok){ const j=await r.json(); if(j&&j.contents&&j.contents.trim().length>5) return JSON.parse(j.contents); }
+    }catch(e){}
+    await new Promise(z=>setTimeout(z,Math.min(2500,600+i*450)));
+  }
+  throw new Error('proxy failed');
+}
+function marketOpen(){
+  const n=new Date(),c=new Date(n.toLocaleString("en-US",{timeZone:"America/Chicago"}));
+  const wd=c.getDay(),mins=c.getHours()*60+c.getMinutes();
+  return wd>=1&&wd<=5&&mins>=510&&mins<=900; // 8:30–15:00 CT
+}
+reg('stk',{
+  snapshot:{mode:'snap'},
+  fetch:async()=>{
+    let holdings={};try{holdings=JSON.parse(localStorage.getItem('stocks_holdings')||'{}');}catch(e){}
+    const syms=Object.keys(holdings);
+    if(!syms.length){
+      const d=await proxy(`${Y}/v8/finance/spark?symbols=SPY&range=1d&interval=15m`);
+      const v=d.SPY;const close=(v.close||[]).filter(x=>x!=null);
+      const last=close[close.length-1],pc=v.chartPreviousClose;
+      return {mode:'spy',pct:(last-pc)/pc*100};
+    }
+    const d=await proxy(`${Y}/v8/finance/spark?symbols=${syms.map(encodeURIComponent).join(',')}&range=1d&interval=15m`);
+    let day=0,val=0,prev=0;
+    for(const s of syms){const v=d[s];if(!v||typeof v!=='object')continue;
+      const close=(v.close||[]).filter(x=>x!=null);
+      const last=close.length?close[close.length-1]:null,pc=v.chartPreviousClose;
+      if(last==null||pc==null)continue;
+      const sh=+holdings[s].sh||0;
+      day+=sh*(last-pc);val+=sh*last;prev+=sh*pc;}
+    return {mode:'pf',day,pct:prev?day/prev*100:0};
+  },
+  render:(el,s)=>{
+    if(s.mode==='pf'){const up=s.day>=0;
+      setVal(el,`<span class="${up?'a-teal':'a-red'}">${up?'+':'−'}$${Math.abs(s.day).toFixed(0)} ${up?'▲':'▼'}</span>`,
+        `${up?'+':''}${s.pct.toFixed(2)}% today`);}
+    else if(s.mode==='spy'){const up=s.pct>=0;
+      setVal(el,`<span class="${up?'a-teal':'a-red'}">SPY ${up?'+':''}${s.pct.toFixed(2)}%</span>`,'add holdings in Stocks app');}
+    else setVal(el,'—','market data unavailable');
+  },
+  hero:s=>{
+    if(s.mode!=='pf'||!marketOpen()||Math.abs(s.pct)<=1)return null;
+    const up=s.day>=0;
+    return {p:80,html:`<div class="tile" onclick="location.href='../stocks/'">
+      <div class="lbl"><span>📈 Portfolio — big move</span></div>
+      <span class="big ${up?'a-teal':'a-red'}">${up?'+':'−'}$${Math.abs(s.day).toFixed(0)} · ${up?'+':''}${s.pct.toFixed(2)}%</span></div>`};
+  }
+});
 if("serviceWorker" in navigator && location.protocol.startsWith("http")){
   window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 }
