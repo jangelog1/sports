@@ -136,6 +136,48 @@ function tickNow(){
     const hb=$('#hero .big');if(hb&&$('#hero .lbl span')&&$('#hero .lbl span').textContent.includes(t.state.name))hb.innerHTML=cdHTML(t.state.at-Date.now());}
 }
 tickNow();setInterval(tickNow,1000);
+
+/* ============ WEATHER + CITY (Open-Meteo, keyless) ============ */
+let GEO=null; // {lat,lon,city} shared with Now strip
+function wx(code,day){ day=day==null?1:day;
+  const m={
+    0:[day?"☀️":"🌙","Clear"],1:[day?"🌤️":"🌙","Mainly clear"],2:[day?"⛅":"☁️","Partly cloudy"],3:["☁️","Overcast"],
+    45:["🌫️","Fog"],48:["🌫️","Rime fog"],
+    51:["🌦️","Light drizzle"],53:["🌦️","Drizzle"],55:["🌧️","Heavy drizzle"],56:["🌧️","Freezing drizzle"],57:["🌧️","Freezing drizzle"],
+    61:["🌦️","Light rain"],63:["🌧️","Rain"],65:["🌧️","Heavy rain"],66:["🌧️","Freezing rain"],67:["🌧️","Freezing rain"],
+    71:["🌨️","Light snow"],73:["🌨️","Snow"],75:["❄️","Heavy snow"],77:["🌨️","Snow grains"],
+    80:["🌦️","Light showers"],81:["🌧️","Showers"],82:["⛈️","Violent showers"],
+    85:["🌨️","Snow showers"],86:["❄️","Snow showers"],
+    95:["⛈️","Thunderstorm"],96:["⛈️","Thunderstorm + hail"],99:["⛈️","Severe thunderstorm"]
+  };
+  return m[code]||["🌡️","—"];
+}
+function locate(){
+  return new Promise(res=>{
+    const fallback={lat:41.88,lon:-87.63,city:"Chicago"};
+    if(!navigator.geolocation)return res(fallback);
+    navigator.geolocation.getCurrentPosition(
+      p=>res({lat:p.coords.latitude,lon:p.coords.longitude,city:null}),
+      ()=>res(fallback),{timeout:5000,maximumAge:600000});
+  });
+}
+reg('wx',{
+  snapshot:{t:'—',e:'🌤️',lbl:''},
+  fetch:async()=>{
+    if(!GEO){GEO=await locate();
+      if(!GEO.city){
+        try{const g=await(await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${GEO.lat}&longitude=${GEO.lon}&localityLanguage=en`)).json();
+          GEO.city=g.city||g.locality||"Here";}catch(e){GEO.city="Here";}
+      }
+      $('#nowCity').textContent=GEO.city;
+    }
+    const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${GEO.lat}&longitude=${GEO.lon}&current=temperature_2m,weather_code,is_day&temperature_unit=fahrenheit`);
+    const d=await r.json();const c=d.current;
+    const [e,lbl]=wx(c.weather_code,c.is_day);
+    return {t:Math.round(c.temperature_2m)+'°',e,lbl};
+  },
+  render:(el,s)=>setVal(el,`<span class="a-blue">${s.t} ${s.e}</span>`,s.lbl)
+});
 if("serviceWorker" in navigator && location.protocol.startsWith("http")){
   window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 }
