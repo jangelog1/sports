@@ -265,6 +265,46 @@ reg('sox',{
     <div class="lbl"><span><span class="dot"></span>White Sox · LIVE</span></div>
     <span class="big a-teal">SOX ${s.my}–${s.their} ${s.opp}</span></div>`}:null
 });
+
+/* ============ BEARS + EURO (TheSportsDB free key 3, best-effort) ============ */
+async function tsdb(p){const r=await fetch(`https://www.thesportsdb.com/api/v1/json/3/${p}`);return r.json();}
+function tsWhen(ts){const d=new Date(ts.replace(" ","T")+(/(Z|\+)/.test(ts)?"":"Z"));
+  return {d,txt:d.toLocaleString("en-US",{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})};}
+reg('bears',{
+  snapshot:{mode:'snap'},
+  fetch:async()=>{
+    const n=await tsdb("eventsnext.php?id=134938");
+    const e=(n.events||[])[0];
+    if(e){const w=tsWhen(e.strTimestamp);
+      const opp=e.strHomeTeam==="Chicago Bears"?["vs",e.strAwayTeam]:["@",e.strHomeTeam];
+      return {mode:'next',when:w.txt,vs:opp[0],opp:opp[1].replace(/^(Los Angeles|New York|Green Bay|Kansas City|New England|San Francisco|Tampa Bay|New Orleans|Las Vegas)\s/,'').split(" ").pop()};}
+    const l=await tsdb("eventslast.php?id=134938");
+    const le=(l.results||[])[0];
+    if(le)return {mode:'last',h:le.strHomeTeam,a:le.strAwayTeam,hs:le.intHomeScore,as:le.intAwayScore};
+    throw new Error("no data");
+  },
+  render:(el,s)=>{
+    if(s.mode==='next')setVal(el,s.when.split(", ").slice(1).join(" "),`${s.vs} ${s.opp}`);
+    else if(s.mode==='last'){const bearsHome=s.h==="Chicago Bears";const my=bearsHome?s.hs:s.as,their=bearsHome?s.as:s.hs;
+      setVal(el,`<span class="${+my>+their?'a-teal':'a-red'}">${+my>+their?'W':'L'} ${my}–${their}</span>`,'last game');}
+    else setVal(el,'—','Off-season');
+  }
+});
+reg('euro',{
+  snapshot:{mode:'snap'},
+  fetch:async()=>{
+    const [rm,wh]=await Promise.all([tsdb("eventsnext.php?id=133738"),tsdb("eventsnext.php?id=133636")]);
+    const pick=(d,tag)=>{const e=(d.events||[])[0];if(!e)return null;const w=tsWhen(e.strTimestamp);
+      return {tag,when:w,ev:e.strEvent.replace(" vs "," v ")};};
+    const both=[pick(rm,"RMA"),pick(wh,"WHU")].filter(Boolean).sort((a,b)=>a.when.d-b.when.d);
+    if(!both.length)throw new Error("no fixtures");
+    return {mode:'next',...both[0]};
+  },
+  render:(el,s)=>{
+    if(s.mode==='next'){setVal(el,`<span style="font-size:16px">${s.tag==='RMA'?'⚪ Real Madrid':'⚒️ West Ham'}</span>`,`${s.ev} · ${s.when.txt}`);}
+    else setVal(el,'—','No fixtures');
+  }
+});
 if("serviceWorker" in navigator && location.protocol.startsWith("http")){
   window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 }
