@@ -100,6 +100,7 @@ async function pass(){
   const hb=$('#hero');
   if(h){hb.innerHTML=h.html;hb.style.display='block';}
   else{hb.innerHTML='';hb.style.display='none';}
+  passing=false;
 }
 /* tiles register below (Tasks 3-8), then boot at end of script */
 
@@ -108,17 +109,17 @@ const TRIPS=[["Austin","2026-07-20"],["Tokyo","2026-09-19"],["San Juan","2026-10
 function nextTrip(){const now=Date.now();
   const t=TRIPS.map(([n,d])=>[n,new Date(d+"T12:00:00")]).find(([,d])=>d>now);
   return t?{name:t[0],at:t[1]}:null;}
-function cdHTML(ms){const s=Math.max(0,Math.floor(ms/1000));
+function cdHTML(ms,small){const s=Math.max(0,Math.floor(ms/1000));
   const d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60),ss=s%60;
   const seg=(v,u)=>`<b>${String(v).padStart(2,'0')}</b><small>${u}</small>`;
-  return `<span class="a-purp mono" style="display:inline-flex;gap:2px;align-items:baseline">${seg(d,'D')}${seg(h,'H')}${seg(m,'M')}${seg(ss,'S')}</span>`;}
+  return `<span class="a-purp mono" style="display:inline-flex;gap:2px;align-items:baseline${small?';font-size:15px':''}">${seg(d,'D')}${seg(h,'H')}${seg(m,'M')}${seg(ss,'S')}</span>`;}
 reg('trip',{
   snapshot:null,
   fetch:async()=>nextTrip(),
   render:(el,t)=>{
     if(!t){setVal(el,'<span class="sub">No trips booked</span>','');return;}
     el.querySelector('.lbl span').textContent='✈️ '+t.name;
-    setVal(el,cdHTML(t.at-Date.now()),t.at.toLocaleDateString("en-US",{weekday:'short',month:'short',day:'numeric'}));
+    setVal(el,cdHTML(t.at-Date.now(),true),t.at.toLocaleDateString("en-US",{weekday:'short',month:'short',day:'numeric'}));
   },
   hero:t=>{
     if(!t)return null;
@@ -132,7 +133,7 @@ function tickNow(){
   $('#nowClock').textContent=n.toLocaleTimeString("en-US",{hour:'numeric',minute:'2-digit'});
   $('#nowDate').textContent=n.toLocaleDateString("en-US",{weekday:'long',month:'long',day:'numeric'});
   const t=TILES.find(x=>x.id==='trip');
-  if(t&&t.state){const b=t.el.querySelector('.big');b.innerHTML=cdHTML(t.state.at-Date.now());
+  if(t&&t.state){const b=t.el.querySelector('.big');b.innerHTML=cdHTML(t.state.at-Date.now(),true);
     const hb=$('#hero .big');if(hb&&$('#hero .lbl span')&&$('#hero .lbl span').textContent.includes(t.state.name))hb.innerHTML=cdHTML(t.state.at-Date.now());}
 }
 tickNow();setInterval(tickNow,1000);
@@ -309,7 +310,7 @@ reg('euro',{
 /* ============ STOCKS (Yahoo via allorigins — proxy pattern lifted from ../stocks/) ============ */
 const PROXY='https://api.allorigins.win/get?url=';
 const Y='https://query1.finance.yahoo.com';
-async function proxy(url,tries=9){
+async function proxy(url,tries=4){ /* fewer tries than stocks app: glance-board favors fast paint; chip covers failure */
   for(let i=0;i<tries;i++){
     try{ const r=await fetch(PROXY+encodeURIComponent(url),{cache:'no-store'});
       if(r.ok){ const j=await r.json(); if(j&&j.contents&&j.contents.trim().length>5) return JSON.parse(j.contents); }
