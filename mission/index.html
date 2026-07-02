@@ -178,6 +178,53 @@ reg('wx',{
   },
   render:(el,s)=>setVal(el,`<span class="a-blue">${s.t} ${s.e}</span>`,s.lbl)
 });
+
+/* ============ WORLD CUP 2026 (FIFA, keyless) ============ */
+const WC_FLAGS={France:"🇫🇷",Spain:"🇪🇸",England:"🏴󠁧󠁢󠁥󠁮󠁧󠁿",Portugal:"🇵🇹",Argentina:"🇦🇷",Brazil:"🇧🇷",Germany:"🇩🇪",Netherlands:"🇳🇱",
+ Belgium:"🇧🇪",Norway:"🇳🇴",USA:"🇺🇸",Morocco:"🇲🇦",Colombia:"🇨🇴",Mexico:"🇲🇽",Japan:"🇯🇵",Switzerland:"🇨🇭",Uruguay:"🇺🇾",
+ Croatia:"🇭🇷",Senegal:"🇸🇳",Sweden:"🇸🇪",Australia:"🇦🇺",Ecuador:"🇪🇨","Ivory Coast":"🇨🇮",Austria:"🇦🇹",Canada:"🇨🇦",
+ Scotland:"🏴󠁧󠁢󠁳󠁣󠁴󠁿","South Korea":"🇰🇷",Algeria:"🇩🇿",Egypt:"🇪🇬",Czechia:"🇨🇿",Paraguay:"🇵🇾",Ghana:"🇬🇭",Iran:"🇮🇷",
+ "DR Congo":"🇨🇩",Tunisia:"🇹🇳","Cape Verde":"🇨🇻",Iraq:"🇮🇶",Jordan:"🇯🇴","New Zealand":"🇳🇿",Panama:"🇵🇦",Qatar:"🇶🇦",
+ "Saudi Arabia":"🇸🇦","South Africa":"🇿🇦",Uzbekistan:"🇺🇿","Curaçao":"🇨🇼",Haiti:"🇭🇹","Türkiye":"🇹🇷","Bosnia and Herzegovina":"🇧🇦"};
+const WC_ALIAS={"IR Iran":"Iran","Cabo Verde":"Cape Verde","Congo DR":"DR Congo","Korea Republic":"South Korea","Côte d'Ivoire":"Ivory Coast"};
+const wcFl=n=>WC_FLAGS[n]||"⚽";
+const wcNm=x=>(x&&x[0]&&x[0].Description)||"";
+const wcAl=n=>WC_ALIAS[n]||n;
+const WC_END=new Date("2026-07-20T04:00:00Z"); // day after the Jul 19 final
+reg('wc',{
+  snapshot:{live:null,next:null,over:false},
+  fetch:async()=>{
+    const r=await fetch("https://api.fifa.com/api/v3/calendar/matches?idCompetition=17&idSeason=285023&count=200&language=en",{cache:"no-store"});
+    const d=await r.json();
+    const ms=((d&&d.Results)||[]).map(m=>{
+      const h=m.Home||{},a=m.Away||{},ld=m.LocalDate||m.Date||"";
+      return {h:wcAl(wcNm(h.TeamName)),a:wcAl(wcNm(a.TeamName)),hs:h.Score,as:a.Score,
+        st:m.MatchStatus,min:m.MatchTime||"",dt:new Date(m.Date),stage:wcNm(m.StageName)};
+    });
+    const live=ms.find(m=>m.st===3)||null;
+    const next=ms.filter(m=>m.st===1&&m.h&&m.a).sort((x,y)=>x.dt-y.dt)[0]||null;
+    return {live,next,over:Date.now()>WC_END&&!live&&!next};
+  },
+  render:(el,s)=>{
+    if(s.over){el.style.display='none';return;}
+    if(s.live){
+      el.querySelector('.lbl span').innerHTML='<span class="dot"></span>⚽ WC 2026 · LIVE';
+      setVal(el,`<span class="a-pink">${wcFl(s.live.h)} ${s.live.hs??0}–${s.live.as??0} ${wcFl(s.live.a)}</span>`,`${s.live.h} v ${s.live.a} · ${s.live.min}`);
+    }else if(s.next){
+      el.querySelector('.lbl span').innerHTML='⚽ World Cup 2026';
+      const t=s.next.dt.toLocaleString("en-US",{weekday:'short',hour:'numeric',minute:'2-digit'});
+      setVal(el,`${wcFl(s.next.h)} vs ${wcFl(s.next.a)}`,`${s.next.h} v ${s.next.a} · ${t}`);
+    }else setVal(el,'🏆','Tournament — see bracket');
+  },
+  hero:s=>{
+    if(!s.live)return null;
+    return {p:100,html:`<div class="tile" onclick="location.href='https://jangelog1.github.io/worldcup2026/'">
+      <div class="lbl"><span><span class="dot"></span>World Cup 2026 · ${s.live.stage}</span><span class="a-pink" style="font-size:12px;font-weight:800">${s.live.min}</span></div>
+      <div class="wcteams"><span class="fl">${wcFl(s.live.h)}</span><span>${s.live.h}</span>
+        <span class="big a-pink" style="margin:0 8px">${s.live.hs??0}–${s.live.as??0}</span>
+        <span>${s.live.a}</span><span class="fl">${wcFl(s.live.a)}</span></div></div>`};
+  }
+});
 if("serviceWorker" in navigator && location.protocol.startsWith("http")){
   window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 }
