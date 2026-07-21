@@ -329,6 +329,19 @@ const auth = {
   clear() { this.token = null; this.expires = 0; sessionStorage.removeItem('daily_tok'); },
 };
 
+// The token dies after ~55min with no refresh_token in the implicit flow —
+// left alone, the dashboard silently goes stale mid-shift. Renew ahead of
+// expiry instead of waiting for a 401. Silent (prompt:'') so it never
+// interrupts; if it fails, the reactive 401 path in gapi() still catches it.
+let renewingToken = false;
+async function maybeRenewToken(clientId) {
+  if (!auth.token || renewingToken) return;
+  if (auth.expires - Date.now() > 10 * 60000) return;
+  renewingToken = true;
+  try { await auth.request(clientId, false); } catch (_) { /* reactive 401 path will handle it */ }
+  finally { renewingToken = false; }
+}
+
 async function gapi(path, params = {}) {
   const url = new URL('https://www.googleapis.com/' + path);
   Object.entries(params).forEach(([k, v]) => v != null && url.searchParams.set(k, v));
@@ -983,6 +996,8 @@ function boot() {
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
   // Re-render clocks and countdowns without refetching.
   setInterval(paint, 60000);
+  // Keep the Google token alive proactively — see maybeRenewToken() above.
+  setInterval(() => { const id = get(LS.gid); if (id) maybeRenewToken(id); }, 5 * 60000);
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden && navigator.onLine && Date.now() - (DATA.at || 0) > 15 * 60000) refresh(false);
   });
