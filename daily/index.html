@@ -12,8 +12,8 @@
 <style>
 :root{
   --bg:#0d0620;
-  --panel:rgba(160,120,255,.07); --panel2:rgba(160,120,255,.13);
-  --line:rgba(94,240,255,.16);
+  --panel:rgba(160,120,255,.09); --panel2:rgba(160,120,255,.16);
+  --line:rgba(94,240,255,.28);
   --tx:#eef3ff; --dim:#a5a8d6; --dim2:#6f6f9e;
   --acc:#5ef0ff; --acc2:#ff5ef0; --warn:#ffcf5e; --bad:#ff4d6d; --ok:#39ff9e;
   --r:16px;
@@ -21,9 +21,9 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
 body{
-  background:radial-gradient(1100px 650px at 12% -8%,rgba(94,240,255,.16) 0%,transparent 55%),
-             radial-gradient(900px 600px at 108% 8%,rgba(255,94,240,.14) 0%,transparent 52%),
-             radial-gradient(1400px 900px at 50% 120%,rgba(120,80,255,.12) 0%,transparent 60%),
+  background:radial-gradient(1100px 650px at 12% -8%,rgba(94,240,255,.30) 0%,transparent 55%),
+             radial-gradient(900px 600px at 108% 8%,rgba(255,94,240,.26) 0%,transparent 52%),
+             radial-gradient(1400px 900px at 50% 120%,rgba(140,80,255,.22) 0%,transparent 60%),
              var(--bg);
   color:var(--tx);
   font:15px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
@@ -35,7 +35,7 @@ body{
 /* header */
 header{display:flex;align-items:flex-start;gap:12px;margin:6px 2px 16px}
 header h1{font-size:26px;margin:0;letter-spacing:-.02em;font-weight:700;
-  text-shadow:0 0 22px rgba(94,240,255,.35)}
+  text-shadow:0 0 18px rgba(94,240,255,.6),0 0 34px rgba(255,94,240,.35)}
 header .sub{color:var(--dim);font-size:13px;margin-top:3px}
 header .right{margin-left:auto;text-align:right;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
 .chip{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;
@@ -49,12 +49,14 @@ header .right{margin-left:auto;text-align:right;display:flex;flex-direction:colu
 
 /* cards */
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
-  padding:14px;margin-bottom:12px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+  padding:14px;margin-bottom:12px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  box-shadow:0 0 0 1px rgba(94,240,255,.05),0 10px 34px rgba(140,0,255,.16)}
 .card h2{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);
   margin:0 0 11px;font-weight:700;display:flex;align-items:center;gap:7px}
 .card h2 .n{margin-left:auto;font-size:11px;color:var(--dim2);letter-spacing:0;text-transform:none}
-.hero{background:linear-gradient(150deg,rgba(94,240,255,.16),rgba(255,94,240,.07));
-  border-color:rgba(94,240,255,.35)}
+.hero{background:linear-gradient(150deg,rgba(94,240,255,.26),rgba(255,94,240,.14));
+  border-color:rgba(94,240,255,.5);
+  box-shadow:0 0 0 1px rgba(94,240,255,.1),0 12px 40px rgba(255,94,240,.18)}
 .empty{color:var(--dim2);font-size:13.5px;padding:4px 0}
 
 /* rows */
