@@ -1,0 +1,1047 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0b1220">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-512.png">
+<title>Daily</title>
+<style>
+:root{
+  --bg:#0b1220; --bg2:#111c33;
+  --panel:rgba(255,255,255,.055); --panel2:rgba(255,255,255,.09);
+  --line:rgba(255,255,255,.12);
+  --tx:#eef3ff; --dim:#9db0d0; --dim2:#6f83a6;
+  --acc:#5eb0ff; --warn:#ffb454; --bad:#ff6b7a; --ok:#4fd39a;
+  --r:16px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:radial-gradient(1200px 700px at 15% -10%,#1a2f52 0%,transparent 55%),
+             radial-gradient(900px 600px at 110% 10%,#232a52 0%,transparent 50%),
+             var(--bg);
+  color:var(--tx);
+  font:15px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
+  min-height:100dvh;
+  padding:env(safe-area-inset-top) 0 calc(env(safe-area-inset-bottom) + 40px);
+}
+.wrap{max-width:680px;margin:0 auto;padding:14px 14px 0}
+
+/* header */
+header{display:flex;align-items:flex-start;gap:12px;margin:6px 2px 16px}
+header h1{font-size:26px;margin:0;letter-spacing:-.02em;font-weight:700}
+header .sub{color:var(--dim);font-size:13px;margin-top:3px}
+header .right{margin-left:auto;text-align:right;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.chip{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;
+  padding:4px 9px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--dim)}
+.chip.live{color:var(--ok);border-color:rgba(79,211,154,.4);background:rgba(79,211,154,.1)}
+.chip.snap{color:var(--warn);border-color:rgba(255,180,84,.4);background:rgba(255,180,84,.1)}
+.chip.off{color:var(--bad);border-color:rgba(255,107,122,.4);background:rgba(255,107,122,.1)}
+.iconbtn{background:var(--panel);border:1px solid var(--line);color:var(--dim);border-radius:10px;
+  padding:6px 10px;font-size:15px;cursor:pointer}
+.iconbtn:active{background:var(--panel2)}
+
+/* cards */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:14px;margin-bottom:12px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.card h2{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);
+  margin:0 0 11px;font-weight:700;display:flex;align-items:center;gap:7px}
+.card h2 .n{margin-left:auto;font-size:11px;color:var(--dim2);letter-spacing:0;text-transform:none}
+.hero{background:linear-gradient(150deg,rgba(94,176,255,.16),rgba(94,176,255,.04));
+  border-color:rgba(94,176,255,.3)}
+.empty{color:var(--dim2);font-size:13.5px;padding:4px 0}
+
+/* rows */
+.row{display:flex;gap:11px;padding:9px 0;border-top:1px solid rgba(255,255,255,.06)}
+.row:first-of-type{border-top:0;padding-top:2px}
+.row .t{flex:0 0 62px;color:var(--acc);font-weight:600;font-size:13px;font-variant-numeric:tabular-nums;padding-top:1px}
+.row .b{flex:1;min-width:0}
+.row .b .ttl{font-weight:600;overflow-wrap:anywhere}
+.row .b .meta{color:var(--dim);font-size:12.5px;margin-top:2px;overflow-wrap:anywhere}
+.row.now{background:rgba(94,176,255,.09);margin:0 -8px;padding-left:8px;padding-right:8px;border-radius:10px}
+a{color:var(--acc);text-decoration:none}
+a:active{opacity:.6}
+.pill{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:6px;
+  margin-right:5px;vertical-align:1px}
+.pill.u{background:rgba(255,107,122,.18);color:#ff9aa5}
+.pill.d{background:rgba(255,180,84,.18);color:#ffc478}
+.pill.k{background:rgba(94,176,255,.18);color:#8fc9ff}
+
+/* big trip block */
+.duty{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap}
+.duty .big{font-size:34px;font-weight:700;letter-spacing:-.03em;line-height:1}
+.duty .lbl{color:var(--dim);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.kv{display:flex;gap:9px;padding:6px 0;font-size:14px;border-top:1px solid rgba(255,255,255,.06)}
+.kv:first-child{border-top:0}
+.kv .k{flex:0 0 78px;color:var(--dim);font-size:12.5px;padding-top:1px}
+.kv .v{flex:1;min-width:0;overflow-wrap:anywhere}
+
+/* weather */
+.wx{display:flex;align-items:center;gap:14px}
+.wx .em{font-size:44px;line-height:1}
+.wx .tmp{font-size:32px;font-weight:700;letter-spacing:-.03em}
+.wx .who{color:var(--dim);font-size:13.5px;margin-top:5px}
+
+/* launch pad */
+.pad{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:8px}
+.pad a{display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 4px;
+  background:var(--panel2);border:1px solid var(--line);border-radius:12px;
+  font-size:10.5px;color:var(--dim);text-align:center;line-height:1.2}
+.pad a .e{font-size:21px}
+.pad a:active{background:rgba(255,255,255,.14)}
+
+/* countdown chips */
+.cds{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+.cd{flex:0 0 auto;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:9px 13px;min-width:96px}
+.cd .p{font-size:13px;font-weight:600}
+.cd .d{font-size:21px;font-weight:700;letter-spacing:-.02em;margin-top:1px}
+.cd .s{font-size:11px;color:var(--dim2);margin-top:1px}
+.cd.now{border-color:rgba(79,211,154,.45);background:rgba(79,211,154,.1)}
+
+/* money */
+.mn{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;
+  border-top:1px solid rgba(255,255,255,.06);font-size:14px}
+.mn:first-child{border-top:0}
+.up{color:var(--ok)} .dn{color:var(--bad)}
+
+/* settings */
+details.set{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:0;margin-bottom:12px}
+details.set>summary{padding:14px;cursor:pointer;font-size:13px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--dim);font-weight:700;list-style:none}
+details.set>summary::-webkit-details-marker{display:none}
+details.set>summary::after{content:'▾';float:right;color:var(--dim2)}
+details.set[open]>summary::after{content:'▴'}
+.setbody{padding:0 14px 14px}
+label{display:block;font-size:12px;color:var(--dim);margin:11px 0 4px;letter-spacing:.02em}
+input,select,textarea{width:100%;background:rgba(0,0,0,.28);border:1px solid var(--line);color:var(--tx);
+  border-radius:10px;padding:10px 11px;font-size:14px;font-family:inherit}
+input:focus,select,textarea:focus{outline:1px solid var(--acc)}
+.hint{font-size:11.5px;color:var(--dim2);margin-top:4px;line-height:1.4}
+.btn{display:inline-block;background:var(--acc);color:#04101f;border:0;border-radius:11px;
+  padding:11px 16px;font-size:14.5px;font-weight:700;cursor:pointer;margin-top:14px;font-family:inherit}
+.btn.ghost{background:var(--panel2);color:var(--tx);border:1px solid var(--line)}
+.btn:active{opacity:.75}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+.err{color:#ff9aa5;font-size:12.5px;margin-top:8px;line-height:1.4;overflow-wrap:anywhere}
+footer{text-align:center;color:var(--dim2);font-size:11.5px;padding:18px 0 6px;line-height:1.6}
+.skel{height:13px;background:rgba(255,255,255,.07);border-radius:6px;margin:9px 0;animation:p 1.4s ease-in-out infinite}
+@keyframes p{50%{opacity:.45}}
+@media (max-width:400px){.row .t{flex-basis:54px;font-size:12.5px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div>
+    <h1 id="greet">Today</h1>
+    <div class="sub" id="datestr">—</div>
+  </div>
+  <div class="right">
+    <span class="chip" id="status">starting</span>
+    <button class="iconbtn" id="refresh" title="Refresh">⟳</button>
+  </div>
+</header>
+
+<div id="app">
+  <div class="card"><div class="skel" style="width:60%"></div><div class="skel"></div><div class="skel" style="width:80%"></div></div>
+</div>
+
+<details class="set" id="setpanel">
+  <summary>⚙︎ Settings</summary>
+  <div class="setbody">
+    <label>Google OAuth Client ID</label>
+    <input id="s_gid" placeholder="123456789-abc.apps.googleusercontent.com" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <div class="hint">Google Cloud Console → APIs &amp; Services → Credentials → OAuth client ID → Web application. Add this page's URL as an Authorized JavaScript origin. Enable the Calendar, Gmail and Drive APIs. This ID is public by design — it is not a secret.</div>
+
+    <label>Work calendar ICS URL (SWA trips)</label>
+    <input id="s_ics" placeholder="https://p##-caldav.icloud.com/published/2/…" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <div class="hint">Calendar.app → right-click the SWA calendar → Share Calendar → Public Calendar → copy the link. Paste it here (webcal:// is fine). Unlike iOS Shortcuts, this <em>can</em> read the event Notes, which is where CrewHub puts the hotel and shuttle info.</div>
+
+    <label>Home base airport</label>
+    <input id="s_base" placeholder="MDW" maxlength="4" autocapitalize="characters" autocorrect="off" spellcheck="false">
+
+    <label>Anthropic API key (optional)</label>
+    <input id="s_key" type="password" placeholder="sk-ant-… — leave blank to skip" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <div class="hint">Only used to write the summary and day plan. Without it the dashboard still works — it falls back to a rules-based summary. Stored in this browser only, never committed.</div>
+
+    <label>Model</label>
+    <select id="s_model">
+      <option value="claude-sonnet-5">Sonnet 5 — cheap, plenty for this</option>
+      <option value="claude-opus-4-8">Opus 4.8 — smarter, ~2× the cost</option>
+    </select>
+
+    <div class="btnrow">
+      <button class="btn" id="save">Save</button>
+      <button class="btn ghost" id="connect">Connect Google</button>
+      <button class="btn ghost" id="signout">Disconnect</button>
+    </div>
+    <div class="err" id="errbox"></div>
+  </div>
+</details>
+
+<footer>
+  Data stays in this browser. Nothing is uploaded or committed.<br>
+  <span id="stamp">—</span>
+</footer>
+
+</div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+'use strict';
+
+/* ───────────────────────── config & storage ───────────────────────── */
+
+const LS = {
+  gid:   'daily_google_client_id',
+  ics:   'daily_ics_url',
+  base:  'daily_home_base',
+  key:   'daily_anthropic_key',
+  model: 'daily_model',
+  cache: 'daily_cache',
+};
+const get = k => localStorage.getItem(k) || '';
+const set = (k, v) => v ? localStorage.setItem(k, v) : localStorage.removeItem(k);
+
+const SCOPES = [
+  'https://www.googleapis.com/auth/calendar.readonly',
+  'https://www.googleapis.com/auth/gmail.readonly',
+  'https://www.googleapis.com/auth/drive.metadata.readonly',
+].join(' ');
+
+// Trips the user has booked. Update here when new ones are added.
+const TRIPS = [
+  { place:'Austin',   start:'2026-07-20', end:'2026-07-24' },
+  { place:'Tokyo',    start:'2026-09-19', end:'2026-10-02' },
+  { place:'San Juan', start:'2026-10-04', end:'2026-10-09' },
+];
+
+// Southwest destinations → coordinates, for layover weather.
+// ponytail: a flat lookup beats geocoding an airport code on every load.
+const AIRPORTS = ('ABQ:35.04,-106.61 ATL:33.64,-84.43 AUS:30.19,-97.67 BDL:41.94,-72.68 BNA:36.13,-86.68 ' +
+'BOS:42.36,-71.01 BUF:42.94,-78.73 BUR:34.20,-118.36 BWI:39.18,-76.67 BZN:45.78,-111.15 CLE:41.41,-81.85 ' +
+'CLT:35.21,-80.94 CMH:39.99,-82.89 CUN:21.04,-86.87 DAL:32.85,-96.85 DCA:38.85,-77.04 DEN:39.86,-104.67 ' +
+'DTW:42.21,-83.35 ELP:31.80,-106.38 EUG:44.12,-123.21 EWR:40.69,-74.17 FLL:26.07,-80.15 GEG:47.62,-117.53 ' +
+'HNL:21.32,-157.92 HOU:29.65,-95.28 IAD:38.95,-77.46 IND:39.72,-86.29 JAX:30.49,-81.69 KOA:19.74,-156.05 ' +
+'LAS:36.08,-115.15 LAX:33.94,-118.41 LGA:40.78,-73.87 LIT:34.73,-92.22 MCI:39.30,-94.71 MCO:28.43,-81.31 ' +
+'MDW:41.79,-87.75 MEM:35.04,-89.98 MIA:25.79,-80.29 MKE:42.95,-87.90 MSP:44.88,-93.22 MSY:29.99,-90.26 ' +
+'OAK:37.72,-122.22 OGG:20.90,-156.43 OKC:35.39,-97.60 OMA:41.30,-95.89 ONT:34.06,-117.60 ORF:36.89,-76.20 ' +
+'PDX:45.59,-122.60 PHL:39.87,-75.24 PHX:33.43,-112.01 PIT:40.49,-80.23 PVD:41.72,-71.43 RDU:35.88,-78.79 ' +
+'RNO:39.50,-119.77 RSW:26.54,-81.76 SAN:32.73,-117.19 SAT:29.53,-98.47 SDF:38.17,-85.74 SEA:47.45,-122.31 ' +
+'SFO:37.62,-122.38 SJC:37.36,-121.93 SJU:18.44,-66.00 SLC:40.79,-111.98 SMF:38.70,-121.59 SNA:33.68,-117.87 ' +
+'STL:38.75,-90.37 TPA:27.98,-82.53 TUL:36.20,-95.89 TUS:32.12,-110.94').split(' ')
+  .reduce((m, s) => { const [c, ll] = s.split(':'); const [a, o] = ll.split(','); m[c] = [+a, +o]; return m; }, {});
+
+const WMO = { 0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌦️',56:'🌧️',57:'🌧️',
+  61:'🌧️',63:'🌧️',65:'🌧️',66:'🌨️',67:'🌨️',71:'🌨️',73:'🌨️',75:'❄️',77:'❄️',80:'🌦️',81:'🌧️',82:'⛈️',
+  85:'🌨️',86:'❄️',95:'⛈️',96:'⛈️',99:'⛈️' };
+
+/* ───────────────────────── small helpers ───────────────────────── */
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
+  ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+// Always label the time with its zone — this dashboard is read across timezones.
+const tzAbbr = d => new Intl.DateTimeFormat('en-US', { timeZoneName:'short' })
+  .formatToParts(d).find(p => p.type === 'timeZoneName')?.value || '';
+const hhmm  = d => new Intl.DateTimeFormat('en-US', { hour:'numeric', minute:'2-digit' }).format(d);
+const hhmmz = d => `${hhmm(d)} ${tzAbbr(d)}`;
+const dayName = d => new Intl.DateTimeFormat('en-US', { weekday:'short', month:'short', day:'numeric' }).format(d);
+const midnight = d => { const x = new Date(d); x.setHours(0,0,0,0); return x; };
+const daysBetween = (a, b) => Math.round((midnight(b) - midnight(a)) / 86400000);
+
+function relTime(target, now) {
+  const ms = target - now;
+  if (ms < 0) return 'now';
+  const m = Math.floor(ms / 60000), h = Math.floor(m / 60), d = Math.floor(h / 24);
+  if (d >= 1) return `${d}d ${h % 24}h`;
+  if (h >= 1) return `${h}h ${m % 60}m`;
+  return `${m}m`;
+}
+
+/* ───────────────────────── network ───────────────────────── */
+
+// Fetch anything that lacks CORS headers through allorigins.
+// ponytail: allorigins rate-limits hard, so retry with backoff — same helper
+// shape the stocks dashboard already uses.
+async function viaProxy(url, tries = 6) {
+  const wrapped = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+  for (let i = 0; i < tries; i++) {
+    try {
+      const r = await fetch(wrapped);
+      if (r.ok) {
+        const t = await r.text();
+        if (t && t.length > 200) return t;
+      }
+    } catch (_) { /* retry */ }
+    await new Promise(res => setTimeout(res, 400 * (i + 1)));
+  }
+  throw new Error('proxy unreachable');
+}
+
+/* ───────────────────────── Google auth ───────────────────────── */
+
+const auth = {
+  token: null,
+  expires: 0,
+  client: null,
+
+  ready() { return !!this.token && Date.now() < this.expires; },
+
+  init(clientId) {
+    if (!window.google?.accounts?.oauth2) throw new Error('Google script not loaded yet — check your connection and retry.');
+    this.client = google.accounts.oauth2.initTokenClient({
+      client_id: clientId,
+      scope: SCOPES,
+      callback: () => {},   // replaced per-request below
+    });
+  },
+
+  // prompt:'' reuses an existing grant silently; consent is only shown the first time.
+  request(clientId, interactive) {
+    return new Promise((resolve, reject) => {
+      if (!this.client) this.init(clientId);
+      this.client.callback = resp => {
+        if (resp.error) return reject(new Error(resp.error_description || resp.error));
+        this.token = resp.access_token;
+        this.expires = Date.now() + (resp.expires_in - 60) * 1000;
+        sessionStorage.setItem('daily_tok', JSON.stringify({ t: this.token, e: this.expires }));
+        resolve(this.token);
+      };
+      this.client.requestAccessToken({ prompt: interactive ? 'consent' : '' });
+    });
+  },
+
+  restore() {
+    try {
+      const s = JSON.parse(sessionStorage.getItem('daily_tok') || 'null');
+      if (s && Date.now() < s.e) { this.token = s.t; this.expires = s.e; }
+    } catch (_) {}
+  },
+
+  clear() { this.token = null; this.expires = 0; sessionStorage.removeItem('daily_tok'); },
+};
+
+async function gapi(path, params = {}) {
+  const url = new URL('https://www.googleapis.com/' + path);
+  Object.entries(params).forEach(([k, v]) => v != null && url.searchParams.set(k, v));
+  const r = await fetch(url, { headers: { Authorization: 'Bearer ' + auth.token } });
+  if (r.status === 401) { auth.clear(); throw new Error('Google session expired — tap Connect Google again.'); }
+  if (!r.ok) {
+    const body = await r.text().catch(() => '');
+    throw new Error(`Google ${path.split('/')[0]} ${r.status}: ${body.slice(0, 160)}`);
+  }
+  return r.json();
+}
+
+/* ───────────────────────── fetchers ───────────────────────── */
+
+async function fetchCalendar() {
+  const now = new Date();
+  const end = new Date(now.getTime() + 7 * 86400000);
+  const d = await gapi('calendar/v3/calendars/primary/events', {
+    timeMin: midnight(now).toISOString(),
+    timeMax: end.toISOString(),
+    singleEvents: true,
+    orderBy: 'startTime',
+    maxResults: 60,
+  });
+  return (d.items || []).map(e => ({
+    title: e.summary || '(no title)',
+    start: new Date(e.start?.dateTime || e.start?.date),
+    end:   new Date(e.end?.dateTime   || e.end?.date   || e.start?.dateTime || e.start?.date),
+    allDay: !e.start?.dateTime,
+    where: e.location || '',
+    desc: e.description || '',
+    link: e.hangoutLink || (e.conferenceData?.entryPoints || []).find(p => p.uri)?.uri || '',
+  }));
+}
+
+async function fetchMail() {
+  // Unread from the last 2 days, excluding the bulk categories.
+  const q = 'is:unread newer_than:2d -in:chats -category:promotions -category:social -category:forums';
+  const list = await gapi('gmail/v1/users/me/messages', { q, maxResults: 15 });
+  const ids = (list.messages || []).map(m => m.id);
+  const msgs = await Promise.all(ids.map(id =>
+    gapi(`gmail/v1/users/me/messages/${id}`, {
+      format: 'metadata',
+      metadataHeaders: ['From', 'Subject', 'Date'],
+    }).catch(() => null)
+  ));
+  return msgs.filter(Boolean).map(m => {
+    const h = Object.fromEntries((m.payload?.headers || []).map(x => [x.name.toLowerCase(), x.value]));
+    const from = h.from || '';
+    return {
+      id: m.id,
+      from: (from.match(/^"?([^"<]+?)"?\s*</) || [, from])[1].trim(),
+      subject: h.subject || '(no subject)',
+      snippet: m.snippet || '',
+      date: new Date(+m.internalDate),
+      important: (m.labelIds || []).includes('IMPORTANT'),
+      starred: (m.labelIds || []).includes('STARRED'),
+    };
+  }).sort((a, b) => b.date - a.date);
+}
+
+async function fetchDrive() {
+  const d = await gapi('drive/v3/files', {
+    orderBy: 'modifiedTime desc',
+    pageSize: 8,
+    q: "trashed = false and mimeType != 'application/vnd.google-apps.folder'",
+    fields: 'files(id,name,webViewLink,modifiedTime,mimeType,iconLink)',
+  });
+  return (d.files || []).map(f => ({
+    name: f.name,
+    link: f.webViewLink,
+    modified: new Date(f.modifiedTime),
+    kind: (f.mimeType || '').split('.').pop().replace('spreadsheet', 'sheet').replace('presentation', 'slides'),
+  }));
+}
+
+/* ── ICS: the SWA work calendar. This is the path Shortcuts could not take —
+      a calendar feed exposes DESCRIPTION, so the CrewHub hotel notes come through. ── */
+
+function unfoldIcs(text) {
+  return text.replace(/\r\n/g, '\n').replace(/\n[ \t]/g, '');
+}
+
+function icsDate(val, params) {
+  // 20260720T170000Z | 20260720T170000 | 20260720
+  const m = val.match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z)?)?$/);
+  if (!m) return null;
+  const [, y, mo, d, h, mi, s, z] = m;
+  if (!h) return { date: new Date(+y, +mo - 1, +d), allDay: true };
+  if (z) return { date: new Date(Date.UTC(+y, +mo - 1, +d, +h, +mi, +s)), allDay: false };
+  return { date: new Date(+y, +mo - 1, +d, +h, +mi, +s), allDay: false };
+}
+
+function unescIcs(s) {
+  return s.replace(/\\n/gi, '\n').replace(/\\,/g, ',').replace(/\\;/g, ';').replace(/\\\\/g, '\\');
+}
+
+function parseIcs(text) {
+  const out = [];
+  for (const block of unfoldIcs(text).split('BEGIN:VEVENT').slice(1)) {
+    const body = block.split('END:VEVENT')[0];
+    const ev = {};
+    for (const line of body.split('\n')) {
+      const i = line.indexOf(':');
+      if (i < 0) continue;
+      const rawKey = line.slice(0, i);
+      const key = rawKey.split(';')[0].toUpperCase();
+      const val = line.slice(i + 1);
+      if (key === 'SUMMARY')     ev.title = unescIcs(val);
+      if (key === 'DESCRIPTION') ev.desc  = unescIcs(val);
+      if (key === 'LOCATION')    ev.where = unescIcs(val);
+      if (key === 'DTSTART')     ev.s = icsDate(val);
+      if (key === 'DTEND')       ev.e = icsDate(val);
+    }
+    if (ev.title && ev.s) {
+      out.push({
+        title: ev.title,
+        desc: ev.desc || '',
+        where: ev.where || '',
+        start: ev.s.date,
+        end: ev.e?.date || ev.s.date,
+        allDay: ev.s.allDay,
+      });
+    }
+  }
+  return out.sort((a, b) => a.start - b.start);
+}
+
+async function fetchTrips(url) {
+  const https = url.replace(/^webcal:/i, 'https:');
+  return parseIcs(await viaProxy(https));
+}
+
+/* Pull the useful bits out of a CrewHub-synced trip note. */
+function readDuty(events, base) {
+  const now = new Date();
+  const soon = events.filter(e => e.end >= midnight(now) && e.start <= new Date(now.getTime() + 5 * 86400000));
+  if (!soon.length) return null;
+
+  const cur = soon.find(e => e.start <= now && e.end >= now) || soon[0];
+  const text = `${cur.title}\n${cur.desc}`;
+
+  // Airport codes in the title, e.g. "17:00 CDT EUG MDW". Last one that isn't home base is the layover.
+  const codes = (cur.title.match(/\b[A-Z]{3}\b/g) || []).filter(c => AIRPORTS[c]);
+  const layover = [...codes].reverse().find(c => c !== base) || codes[codes.length - 1] || null;
+
+  const grab = re => (text.match(re) || [])[1]?.trim().split('\n')[0] || '';
+  const hotel   = grab(/(?:hotel|lodging)\s*[:\-]\s*(.+)/i);
+  const shuttle = grab(/(?:shuttle|van|pickup)\s*[:\-]\s*(.+)/i);
+  const phone   = grab(/(\+?1?[\s.\-(]?\d{3}[\s.\-)]{1,2}\d{3}[\s.\-]?\d{4})/);
+  const report  = cur.allDay ? null : cur.start;
+
+  // Next day off = first gap of >=1 day after this trip block ends.
+  const after = events.filter(e => e.start > cur.end).sort((a, b) => a.start - b.start)[0];
+  const daysOff = after ? daysBetween(cur.end, after.start) : null;
+
+  return { event: cur, layover, hotel, shuttle, phone, report, daysOff, upcoming: soon.slice(0, 4) };
+}
+
+/* ───────────────────────── weather ───────────────────────── */
+
+async function fetchWeather(lat, lon) {
+  const u = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+    `&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,precipitation` +
+    `&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code` +
+    `&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&forecast_days=2`;
+  const r = await fetch(u);
+  if (!r.ok) throw new Error('weather ' + r.status);
+  return r.json();
+}
+
+// What to wear / bring — same advice engine idea as the weather dashboard.
+function advise(w) {
+  const t = Math.round(w.current.apparent_temperature);
+  const hi = Math.round(w.daily.temperature_2m_max[0]);
+  const lo = Math.round(w.daily.temperature_2m_min[0]);
+  const rain = w.daily.precipitation_probability_max[0] ?? 0;
+  const wind = Math.round(w.current.wind_speed_10m);
+  const bits = [];
+  if (t <= 32)      bits.push('Heavy coat, hat, gloves');
+  else if (t <= 48) bits.push('Warm coat');
+  else if (t <= 60) bits.push('Jacket or hoodie');
+  else if (t <= 74) bits.push('Long sleeves or a light layer');
+  else if (t <= 88) bits.push('Short sleeves');
+  else              bits.push('Lightest layer you have — it is hot');
+  if (hi - lo >= 25) bits.push('big day/night swing, layer up');
+  if (rain >= 50)    bits.push('umbrella — rain likely');
+  else if (rain >= 25) bits.push('maybe an umbrella');
+  if (wind >= 20)    bits.push('windy');
+  return bits.join(' · ');
+}
+
+/* ───────────────────────── derived sections (no LLM needed) ───────────────────────── */
+
+const ACTION = /\b(please|can you|could you|need(?:s|ed)? (?:you|your)|by (?:eod|tomorrow|friday|monday)|respond|reply|confirm|approve|sign|review|submit|deadline|due|urgent|asap|action required|reminder)\b/i;
+const DEADLINE = /\b(due|deadline|expires?|expiring|renew|submit|deliver|cutoff|last day|final)\b/i;
+
+function deriveTasks(mail, cal) {
+  const t = [];
+  for (const m of mail) {
+    if (m.starred || m.important || ACTION.test(m.subject) || ACTION.test(m.snippet)) {
+      t.push({ text: m.subject, from: m.from, kind: m.starred ? 'starred' : m.important ? 'important' : 'action' });
+    }
+  }
+  for (const e of cal) {
+    if (DEADLINE.test(e.title)) t.push({ text: e.title, from: dayName(e.start), kind: 'calendar' });
+  }
+  return t.slice(0, 8);
+}
+
+function deriveDeadlines(cal, now) {
+  const week = new Date(now.getTime() + 7 * 86400000);
+  return cal
+    .filter(e => e.start > now && e.start <= week && (DEADLINE.test(e.title) || e.allDay))
+    .slice(0, 6);
+}
+
+// Time-blocked plan built from the real schedule. Gaps over 45 min become focus blocks.
+function derivePlan(cal, now) {
+  const endOfDay = new Date(now); endOfDay.setHours(19, 0, 0, 0);
+  const today = cal.filter(e => !e.allDay && e.end > now && daysBetween(now, e.start) === 0)
+                   .sort((a, b) => a.start - b.start);
+  const plan = [];
+  let cursor = new Date(Math.max(now, midnight(now).getTime() + 8 * 3600000));
+
+  for (const e of today) {
+    const gap = (e.start - cursor) / 60000;
+    if (gap >= 45) plan.push({ start: new Date(cursor), end: e.start, what: 'Open block — take the biggest task', free: true });
+    plan.push({ start: e.start, end: e.end, what: e.title, free: false });
+    cursor = new Date(Math.max(cursor, e.end));
+  }
+  if ((endOfDay - cursor) / 60000 >= 45 && cursor < endOfDay) {
+    plan.push({ start: new Date(cursor), end: endOfDay, what: 'Open block — wrap up and clear the inbox', free: true });
+  }
+  return plan.slice(0, 8);
+}
+
+function ruleSummary(d) {
+  const bits = [];
+  if (d.duty?.report && d.duty.report > new Date()) {
+    bits.push(`Report ${hhmmz(d.duty.report)} (${relTime(d.duty.report, new Date())}).`);
+  } else if (d.duty) {
+    bits.push(`On trip: ${d.duty.event.title}.`);
+  }
+  const meetings = (d.cal || []).filter(e => !e.allDay && daysBetween(new Date(), e.start) === 0);
+  if (meetings.length) {
+    bits.push(`${meetings.length} event${meetings.length > 1 ? 's' : ''} today, first at ${hhmm(meetings[0].start)}.`);
+  } else if (d.cal) {
+    bits.push('Nothing on the calendar today.');
+  }
+  if (d.tasks?.length) bits.push(`${d.tasks.length} item${d.tasks.length > 1 ? 's' : ''} need a reply or an action.`);
+  if (d.deadlines?.length) bits.push(`${d.deadlines.length} deadline${d.deadlines.length > 1 ? 's' : ''} inside 7 days.`);
+  const trip = TRIPS.map(t => ({ ...t, d: daysBetween(new Date(), new Date(t.start + 'T00:00')) }))
+                    .filter(t => t.d >= 0).sort((a, b) => a.d - b.d)[0];
+  if (trip) bits.push(trip.d === 0 ? `${trip.place} starts today.` : `${trip.place} in ${trip.d} day${trip.d > 1 ? 's' : ''}.`);
+  return bits.join(' ') || 'Nothing loaded yet — connect Google in Settings.';
+}
+
+/* ───────────────────────── optional Claude summary ───────────────────────── */
+
+async function claudeSummary(d) {
+  const key = get(LS.key);
+  if (!key) return null;
+  const model = get(LS.model) || 'claude-sonnet-5';
+
+  const facts = {
+    now: new Date().toString(),
+    duty: d.duty && {
+      trip: d.duty.event.title,
+      report: d.duty.report ? hhmmz(d.duty.report) : null,
+      layover: d.duty.layover, hotel: d.duty.hotel, shuttle: d.duty.shuttle,
+    },
+    today: (d.cal || []).filter(e => daysBetween(new Date(), e.start) === 0)
+      .map(e => ({ t: e.allDay ? 'all day' : hhmm(e.start), title: e.title })),
+    week: (d.cal || []).filter(e => daysBetween(new Date(), e.start) > 0)
+      .slice(0, 10).map(e => ({ d: dayName(e.start), title: e.title })),
+    unread: (d.mail || []).map(m => ({ from: m.from, subject: m.subject, snippet: m.snippet.slice(0, 140) })),
+    files: (d.drive || []).map(f => f.name),
+  };
+
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: 700,
+      system: 'You brief a Southwest Airlines flight attendant each morning. They read this on a phone, ' +
+              'often minutes before leaving for a flight. Lead with what changes their next few hours. ' +
+              'Be specific and short. Never invent a fact that is not in the data. Plain text, no markdown.',
+      messages: [{
+        role: 'user',
+        content: 'Write two things from this data.\n\n' +
+                 '1) SUMMARY: three sentences max, the state of the day.\n' +
+                 '2) PLAN: up to five lines, each "HH:MM — what", a realistic order of attack around the fixed events.\n\n' +
+                 'Return exactly:\nSUMMARY: <text>\nPLAN:\n<lines>\n\nData:\n' +
+                 JSON.stringify(facts, null, 1),
+      }],
+    }),
+  });
+
+  if (!r.ok) throw new Error('Claude ' + r.status + ': ' + (await r.text()).slice(0, 140));
+  const j = await r.json();
+  if (j.stop_reason === 'refusal') return null;
+  const text = (j.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+  const summary = (text.match(/SUMMARY:\s*([\s\S]*?)(?:\nPLAN:|$)/i) || [])[1]?.trim() || '';
+  const plan = (text.match(/PLAN:\s*([\s\S]*)$/i) || [])[1]?.trim() || '';
+  return { summary, plan };
+}
+
+/* ───────────────────────── render ───────────────────────── */
+
+function card(title, count, inner) {
+  return `<section class="card"><h2>${title}${count != null ? `<span class="n">${count}</span>` : ''}</h2>${inner}</section>`;
+}
+
+function renderDuty(duty) {
+  if (!duty) return '';
+  const now = new Date();
+  const rows = [];
+  if (duty.report && duty.report > now) {
+    rows.push(`<div class="duty" style="margin-bottom:10px">
+      <div><div class="lbl">Report in</div><div class="big">${esc(relTime(duty.report, now))}</div></div>
+      <div><div class="lbl">at</div><div class="big" style="font-size:24px">${esc(hhmmz(duty.report))}</div></div>
+    </div>`);
+  }
+  rows.push(`<div class="kv"><div class="k">Trip</div><div class="v">${esc(duty.event.title)}</div></div>`);
+  if (duty.layover) rows.push(`<div class="kv"><div class="k">Layover</div><div class="v">${esc(duty.layover)}</div></div>`);
+  if (duty.hotel)   rows.push(`<div class="kv"><div class="k">Hotel</div><div class="v">${esc(duty.hotel)}</div></div>`);
+  if (duty.shuttle) rows.push(`<div class="kv"><div class="k">Shuttle</div><div class="v">${esc(duty.shuttle)}</div></div>`);
+  if (duty.phone)   rows.push(`<div class="kv"><div class="k">Phone</div><div class="v"><a href="tel:${esc(duty.phone.replace(/[^\d+]/g,''))}">${esc(duty.phone)}</a></div></div>`);
+  if (duty.daysOff != null && duty.daysOff > 0)
+    rows.push(`<div class="kv"><div class="k">Days off</div><div class="v">${duty.daysOff} after this trip</div></div>`);
+  rows.push(`<div style="margin-top:11px"><a href="crewhub://" onclick="return true">Open CrewHub ↗</a>
+    <span style="color:var(--dim2);font-size:12px"> — hotel page is under Calendar → trip → release</span></div>`);
+  return `<section class="card hero"><h2>✈️ Trip &amp; duty</h2>${rows.join('')}</section>`;
+}
+
+function renderWeather(wx, place) {
+  if (!wx) return '';
+  const c = wx.current;
+  const em = WMO[c.weather_code] || '🌡️';
+  return card(`🌤️ ${esc(place)}`, null, `
+    <div class="wx">
+      <div class="em">${em}</div>
+      <div>
+        <div class="tmp">${Math.round(c.temperature_2m)}°</div>
+        <div style="color:var(--dim);font-size:13px">feels ${Math.round(c.apparent_temperature)}° ·
+          ${Math.round(wx.daily.temperature_2m_min[0])}°/${Math.round(wx.daily.temperature_2m_max[0])}°</div>
+      </div>
+    </div>
+    <div class="who">${esc(advise(wx))}</div>`);
+}
+
+function renderSchedule(cal) {
+  if (!cal) return '';
+  const now = new Date();
+  const today = cal.filter(e => daysBetween(now, e.start) === 0);
+  if (!today.length) return card('📋 Today', 0, `<div class="empty">Calendar is clear.</div>`);
+  const rows = today.map(e => {
+    const live = !e.allDay && e.start <= now && e.end >= now;
+    return `<div class="row${live ? ' now' : ''}">
+      <div class="t">${e.allDay ? 'all day' : esc(hhmm(e.start))}</div>
+      <div class="b"><div class="ttl">${esc(e.title)}</div>
+        ${e.where || e.link ? `<div class="meta">${e.link ? `<a href="${esc(e.link)}">Join ↗</a>` : ''}${e.link && e.where ? ' · ' : ''}${esc(e.where)}</div>` : ''}
+      </div></div>`;
+  }).join('');
+  return card(`📋 Today <span style="color:var(--dim2);font-weight:400;text-transform:none;letter-spacing:0">${esc(tzAbbr(now))}</span>`, today.length, rows);
+}
+
+function renderMail(mail) {
+  if (!mail) return '';
+  if (!mail.length) return card('✉️ Needs a reply', 0, `<div class="empty">Inbox is clear.</div>`);
+  const rows = mail.slice(0, 8).map(m => `
+    <div class="row">
+      <div class="t">${esc(hhmm(m.date))}</div>
+      <div class="b">
+        <div class="ttl">${m.starred ? '<span class="pill u">★</span>' : m.important ? '<span class="pill d">!</span>' : ''}
+          <a href="https://mail.google.com/mail/u/0/#inbox/${esc(m.id)}">${esc(m.subject)}</a></div>
+        <div class="meta">${esc(m.from)} — ${esc(m.snippet.slice(0, 90))}</div>
+      </div></div>`).join('');
+  return card('✉️ Needs a reply', mail.length, rows);
+}
+
+function renderTasks(tasks) {
+  if (!tasks?.length) return '';
+  const rows = tasks.map(t => `<div class="row"><div class="t" style="flex-basis:auto;padding-right:2px">•</div>
+    <div class="b"><div class="ttl">${esc(t.text)}</div><div class="meta">${esc(t.from)}</div></div></div>`).join('');
+  return card('✅ Action items <span style="color:var(--dim2);font-weight:400;text-transform:none;letter-spacing:0">— pulled by keyword</span>', tasks.length, rows);
+}
+
+function renderDeadlines(dl) {
+  if (!dl?.length) return '';
+  const now = new Date();
+  const rows = dl.map(e => {
+    const d = daysBetween(now, e.start);
+    return `<div class="row"><div class="t">${d === 0 ? 'today' : d === 1 ? 'tmrw' : `${d}d`}</div>
+      <div class="b"><div class="ttl">${esc(e.title)}</div><div class="meta">${esc(dayName(e.start))}</div></div></div>`;
+  }).join('');
+  return card('⏳ Next 7 days', dl.length, rows);
+}
+
+function renderFiles(files) {
+  if (!files?.length) return '';
+  const rows = files.slice(0, 6).map(f => `<div class="row">
+    <div class="t" style="flex-basis:44px;color:var(--dim2);font-size:11px">${esc(f.kind || 'file')}</div>
+    <div class="b"><div class="ttl"><a href="${esc(f.link)}">${esc(f.name)}</a></div>
+      <div class="meta">${esc(dayName(f.modified))}</div></div></div>`).join('');
+  return card('📎 Recent files', files.length, rows);
+}
+
+function renderPlan(plan, llmPlan) {
+  if (llmPlan) {
+    const rows = llmPlan.split('\n').filter(Boolean).slice(0, 6).map(l => {
+      const m = l.match(/^\s*[-•]?\s*(\d{1,2}[:.]\d{2}\s*(?:[AaPp][Mm])?)\s*[—–\-:]\s*(.+)$/);
+      return m
+        ? `<div class="row"><div class="t">${esc(m[1])}</div><div class="b"><div class="ttl">${esc(m[2])}</div></div></div>`
+        : `<div class="row"><div class="t"></div><div class="b"><div class="ttl">${esc(l.replace(/^\s*[-•]\s*/, ''))}</div></div></div>`;
+    }).join('');
+    return card('🧭 Suggested plan', null, rows);
+  }
+  if (!plan?.length) return '';
+  const rows = plan.map(p => `<div class="row"><div class="t">${esc(hhmm(p.start))}</div>
+    <div class="b"><div class="ttl"${p.free ? ' style="color:var(--dim)"' : ''}>${esc(p.what)}</div>
+      <div class="meta">until ${esc(hhmm(p.end))}</div></div></div>`).join('');
+  return card('🧭 Suggested plan', null, rows);
+}
+
+function renderTrips() {
+  const now = new Date();
+  const chips = TRIPS.map(t => {
+    const s = new Date(t.start + 'T00:00'), e = new Date(t.end + 'T00:00');
+    const d = daysBetween(now, s), out = daysBetween(now, e);
+    if (out < 0) return '';
+    const on = d <= 0 && out >= 0;
+    return `<div class="cd${on ? ' now' : ''}">
+      <div class="p">${esc(t.place)}</div>
+      <div class="d">${on ? 'now' : d}</div>
+      <div class="s">${on ? `${out}d left` : 'days out'}</div></div>`;
+  }).filter(Boolean).join('');
+  return chips ? card('🧳 Trips', null, `<div class="cds">${chips}</div>`) : '';
+}
+
+function renderMoney() {
+  // Read-only glance at what the stocks dashboard already stores on this origin.
+  // No signals, no recommendations — display only.
+  let h;
+  try { h = JSON.parse(localStorage.getItem('stocks_holdings') || 'null'); } catch (_) { return ''; }
+  if (!h || !Object.keys(h).length) return '';
+  const rows = Object.entries(h).slice(0, 6).map(([sym, pos]) => {
+    const shares = pos?.shares ?? pos?.qty ?? 0;
+    const cost = pos?.cost ?? pos?.avg ?? 0;
+    return `<div class="mn"><span>${esc(sym)}</span>
+      <span style="color:var(--dim)">${shares} sh @ ${cost ? '$' + Number(cost).toFixed(2) : '—'}</span></div>`;
+  }).join('');
+  return card('📈 Holdings', null, rows +
+    `<div class="hint" style="margin-top:8px">Positions only. Open the Stocks app for live prices.</div>`);
+}
+
+function renderPad() {
+  const links = [
+    ['🚀','Mission','../mission/'], ['🌤️','Weather','../weather/?geo=1'], ['🧳','Trips','../trips/'],
+    ['📈','Stocks','../stocks/'], ['⚪','Sox','../whitesox/'], ['🐻','Bears','../bears/'],
+    ['🏈','Fantasy','../fantasy/'], ['🏆','World Cup','https://jangelog1.github.io/worldcup2026/'],
+  ];
+  return card('🔗 Launch pad', null,
+    `<div class="pad">${links.map(([e, n, u]) =>
+      `<a href="${esc(u)}"><span class="e">${e}</span>${esc(n)}</a>`).join('')}</div>`);
+}
+
+/* ───────────────────────── orchestration ───────────────────────── */
+
+let DATA = {};
+
+function paint() {
+  const now = new Date();
+  const h = now.getHours();
+  $('#greet').textContent = h < 5 ? 'Late night' : h < 12 ? 'Good morning' : h < 17 ? 'Afternoon' : 'Evening';
+  $('#datestr').textContent = `${dayName(now)} · ${tzAbbr(now)}`;
+
+  const summary = DATA.llm?.summary || ruleSummary(DATA);
+
+  $('#app').innerHTML =
+    card('📰 Summary', null, `<div style="font-size:15.5px;line-height:1.5">${esc(summary)}</div>`) +
+    renderDuty(DATA.duty) +
+    renderWeather(DATA.wx, DATA.wxPlace) +
+    renderSchedule(DATA.cal) +
+    renderMail(DATA.mail) +
+    renderTasks(DATA.tasks) +
+    renderDeadlines(DATA.deadlines) +
+    renderPlan(DATA.plan, DATA.llm?.plan) +
+    renderFiles(DATA.drive) +
+    renderTrips() +
+    renderMoney() +
+    renderPad();
+
+  $('#stamp').textContent = DATA.at
+    ? `updated ${hhmmz(new Date(DATA.at))}`
+    : 'no data yet';
+}
+
+function setStatus(text, cls) {
+  const el = $('#status');
+  el.textContent = text;
+  el.className = 'chip' + (cls ? ' ' + cls : '');
+}
+
+function saveCache() {
+  try {
+    localStorage.setItem(LS.cache, JSON.stringify({ ...DATA, at: Date.now() }));
+  } catch (_) { /* quota — not worth handling */ }
+}
+
+function loadCache() {
+  try {
+    const c = JSON.parse(localStorage.getItem(LS.cache) || 'null');
+    if (!c) return false;
+    // Dates round-trip as strings through JSON — revive the ones we render.
+    const revive = a => (a || []).map(x => ({ ...x, start: new Date(x.start), end: new Date(x.end),
+      date: x.date ? new Date(x.date) : undefined, modified: x.modified ? new Date(x.modified) : undefined }));
+    c.cal = revive(c.cal); c.mail = revive(c.mail); c.drive = revive(c.drive);
+    c.deadlines = revive(c.deadlines); c.plan = revive(c.plan);
+    if (c.duty) {
+      c.duty.event.start = new Date(c.duty.event.start);
+      c.duty.event.end = new Date(c.duty.event.end);
+      if (c.duty.report) c.duty.report = new Date(c.duty.report);
+    }
+    DATA = c;
+    return true;
+  } catch (_) { return false; }
+}
+
+async function refresh(interactive) {
+  const errs = [];
+  const clientId = get(LS.gid);
+  const icsUrl = get(LS.ics);
+  const base = (get(LS.base) || '').toUpperCase();
+
+  setStatus('loading', '');
+
+  // Work calendar is independent of Google — fetch it either way.
+  if (icsUrl) {
+    try {
+      const trips = await fetchTrips(icsUrl);
+      DATA.duty = readDuty(trips, base);
+    } catch (e) { errs.push('Work calendar: ' + e.message); }
+  }
+
+  if (clientId) {
+    try {
+      if (!auth.ready()) await auth.request(clientId, interactive);
+      const [cal, mail, drive] = await Promise.all([
+        fetchCalendar().catch(e => { errs.push('Calendar: ' + e.message); return DATA.cal || null; }),
+        fetchMail().catch(e     => { errs.push('Gmail: '    + e.message); return DATA.mail || null; }),
+        fetchDrive().catch(e    => { errs.push('Drive: '    + e.message); return DATA.drive || null; }),
+      ]);
+      DATA.cal = cal; DATA.mail = mail; DATA.drive = drive;
+    } catch (e) { errs.push('Google sign-in: ' + e.message); }
+  } else {
+    errs.push('No Google client ID set — open Settings.');
+  }
+
+  const now = new Date();
+  DATA.tasks = deriveTasks(DATA.mail || [], DATA.cal || []);
+  DATA.deadlines = deriveDeadlines(DATA.cal || [], now);
+  DATA.plan = derivePlan(DATA.cal || [], now);
+
+  // Weather for wherever the next trip puts them; home base otherwise.
+  const code = DATA.duty?.layover || base;
+  if (AIRPORTS[code]) {
+    try {
+      DATA.wx = await fetchWeather(...AIRPORTS[code]);
+      DATA.wxPlace = code === base ? `${code} · home` : `${code} · layover`;
+    } catch (e) { errs.push('Weather: ' + e.message); }
+  }
+
+  DATA.at = Date.now();
+  paint();
+  saveCache();
+
+  // Summary last — the dashboard is already usable without it.
+  if (get(LS.key)) {
+    try {
+      const llm = await claudeSummary(DATA);
+      if (llm) { DATA.llm = llm; paint(); saveCache(); }
+    } catch (e) { errs.push('Summary: ' + e.message); }
+  }
+
+  $('#errbox').innerHTML = errs.map(esc).join('<br>');
+  if (errs.length && !DATA.cal) { setStatus('offline', 'off'); if (!interactive) $('#setpanel').open = true; }
+  else if (errs.length)         setStatus('partial', 'snap');
+  else                          setStatus('live', 'live');
+}
+
+/* ───────────────────────── boot ───────────────────────── */
+
+function boot() {
+  // Fill settings from storage.
+  $('#s_gid').value = get(LS.gid);
+  $('#s_ics').value = get(LS.ics);
+  $('#s_base').value = get(LS.base);
+  $('#s_key').value = get(LS.key);
+  $('#s_model').value = get(LS.model) || 'claude-sonnet-5';
+
+  auth.restore();
+
+  // Render the last good payload immediately — this is the airplane-mode path.
+  if (loadCache()) {
+    paint();
+    const age = Math.round((Date.now() - DATA.at) / 60000);
+    setStatus(age < 60 ? `${age}m ago` : `${Math.round(age / 60)}h ago`, 'snap');
+  } else {
+    paint();
+    setStatus('setup needed', 'off');
+    if (!get(LS.gid)) $('#setpanel').open = true;
+  }
+
+  $('#save').onclick = () => {
+    set(LS.gid, $('#s_gid').value.trim());
+    set(LS.ics, $('#s_ics').value.trim());
+    set(LS.base, $('#s_base').value.trim().toUpperCase());
+    set(LS.key, $('#s_key').value.trim());
+    set(LS.model, $('#s_model').value);
+    auth.client = null;
+    $('#errbox').textContent = '';
+    refresh(false);
+  };
+  $('#connect').onclick = async () => {
+    const id = $('#s_gid').value.trim();
+    if (!id) { $('#errbox').textContent = 'Paste a Google OAuth client ID first.'; return; }
+    set(LS.gid, id);
+    try { auth.client = null; await auth.request(id, true); refresh(true); }
+    catch (e) { $('#errbox').textContent = e.message; }
+  };
+  $('#signout').onclick = () => {
+    auth.clear();
+    localStorage.removeItem(LS.cache);
+    DATA = {};
+    paint();
+    setStatus('disconnected', 'off');
+  };
+  $('#refresh').onclick = () => refresh(false);
+
+  // Shortcuts deep links: ?refresh=1 forces a pull, #trip jumps to the duty card.
+  const q = new URLSearchParams(location.search);
+  if (navigator.onLine && (q.has('refresh') || get(LS.gid) || get(LS.ics))) refresh(false);
+
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+  // Re-render clocks and countdowns without refetching.
+  setInterval(paint, 60000);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && navigator.onLine && Date.now() - (DATA.at || 0) > 15 * 60000) refresh(false);
+  });
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+else boot();
+
+/* ───────────────────────── self-check ─────────────────────────
+   Runs only with ?selftest=1. Covers the parsing and date logic —
+   the parts that break silently if they break at all. */
+if (new URLSearchParams(location.search).has('selftest')) {
+  const t = [];
+  const ok = (name, cond) => t.push((cond ? 'PASS ' : 'FAIL ') + name);
+
+  const ics = 'BEGIN:VEVENT\r\nSUMMARY:17:00 CDT EUG MDW Trip MS14\r\nDTSTART;VALUE=DATE:20260720\r\n' +
+    'DTEND;VALUE=DATE:20260721\r\nDESCRIPTION:Synced from CrewHub BYO\\nHotel: Hyatt Place Eugene\\n' +
+    'Shuttle: 20 min pickup at door 3\\n541-555-0134\r\nEND:VEVENT\r\n';
+  const ev = parseIcs(ics);
+  ok('ics parses one event', ev.length === 1);
+  ok('ics reads summary', ev[0].title === '17:00 CDT EUG MDW Trip MS14');
+  ok('ics unescapes newlines in notes', ev[0].desc.includes('\nHotel: Hyatt Place Eugene'));
+  ok('ics all-day flag', ev[0].allDay === true);
+
+  // Folded (wrapped) lines must rejoin before parsing.
+  const folded = 'BEGIN:VEVENT\r\nSUMMARY:Long trip name that\r\n  continues here\r\nDTSTART:20260720T170000Z\r\nEND:VEVENT\r\n';
+  ok('ics unfolds wrapped lines', parseIcs(folded)[0].title === 'Long trip name that continues here');
+
+  const duty = readDuty(ev, 'MDW');
+  ok('duty picks layover, not home base', duty && duty.layover === 'EUG');
+  ok('duty extracts hotel', duty && duty.hotel === 'Hyatt Place Eugene');
+  ok('duty extracts shuttle', duty && duty.shuttle.startsWith('20 min'));
+  ok('duty extracts phone', duty && /555.0134/.test(duty.phone));
+
+  ok('utc ics time is a real date', !isNaN(icsDate('20260720T170000Z').date));
+  ok('date-only is flagged all-day', icsDate('20260720').allDay === true);
+  ok('bad ics date returns null', icsDate('garbage') === null);
+
+  const a = new Date(2026, 6, 20, 23, 30), b = new Date(2026, 6, 21, 0, 30);
+  ok('daysBetween crosses midnight as 1', daysBetween(a, b) === 1);
+  ok('daysBetween same day is 0', daysBetween(a, new Date(2026, 6, 20, 1, 0)) === 0);
+
+  ok('relTime hours+minutes', relTime(new Date(Date.now() + 3 * 3600000 + 5 * 60000), new Date()).startsWith('3h'));
+  ok('relTime past reads now', relTime(new Date(Date.now() - 1000), new Date()) === 'now');
+
+  ok('every airport has finite coords',
+    Object.values(AIRPORTS).every(([la, lo]) => isFinite(la) && isFinite(lo) && Math.abs(la) <= 90 && Math.abs(lo) <= 180));
+  ok('escaping neutralises tags', esc('<img src=x onerror=1>') === '&lt;img src=x onerror=1&gt;');
+
+  const w = { current:{ temperature_2m:30, apparent_temperature:28, weather_code:71, wind_speed_10m:25, precipitation:0 },
+              daily:{ temperature_2m_max:[34], temperature_2m_min:[20], precipitation_probability_max:[70], weather_code:[71] } };
+  ok('advise warns about cold, rain and wind',
+    /Heavy coat/.test(advise(w)) && /umbrella/.test(advise(w)) && /windy/.test(advise(w)));
+
+  console.log(t.join('\n'));
+  document.body.insertAdjacentHTML('afterbegin',
+    `<pre style="position:fixed;inset:0;z-index:99;background:#000;color:#0f0;padding:16px;margin:0;overflow:auto;font:12px monospace">${
+      esc(t.join('\n'))}\n\n${t.filter(x => x.startsWith('FAIL')).length} failed of ${t.length}</pre>`);
+}
+</script>
+</body>
+</html>
